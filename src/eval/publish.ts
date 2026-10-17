@@ -13,7 +13,8 @@ export function publicRun(run: Run, reviews: HumanReview[] = []) {
   return { ...metadata, reviewHash: createHash("sha256").update(JSON.stringify(reviews)).digest("hex"), summary, recommendation: recommend(summary),
     cases: rows.map(r => ({ caseId: r.caseId, category: r.category, model: r.model, variant: r.variant, repeat: r.repeat, status: r.result.status, pass: r.finalGrade.pass,
       checks: r.finalGrade.checks, totalMs: r.result.totalMs, costUsd: r.result.costUsd,
-      finalText: r.result.text, attempts: r.result.attempts.map((a, i) => ({ index: a.index, text: a.text, verdict: a.verdict, reasons: a.reasons, pass: r.attemptGrades[i]?.pass })) })),
+      requests: r.result.requests.map(req => ({ purpose: req.purpose, model: req.model, provider: req.provider, status: req.status, ms: req.ms, costUsd: req.costUsd, costSource: req.costSource, error: req.error })),
+      finalText: r.result.text, attempts: r.result.attempts.map((a, i) => ({ index: a.index, text: a.text, verdict: a.verdict, reasons: a.reasons, acceptedStyleOnly: a.acceptedStyleOnly, pass: r.attemptGrades[i]?.pass })) })),
   };
 }
 export type PublicRun = ReturnType<typeof publicRun>;

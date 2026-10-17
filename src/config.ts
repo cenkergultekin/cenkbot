@@ -1,8 +1,9 @@
 import { readFile } from "node:fs/promises";
 import type { Config, Model, Profile, Style, Turn } from "./types.js";
-export const VERSION = "0.1.2";
+export const VERSION = "0.1.3";
 export const PROMPT_VERSION = "prompt@1";
-export const POLICY_VERSION = "policy@1";
+export const POLICY_VERSION = "policy@2";
+export const SOFT_REPAIR_REASONS: ReadonlySet<string> = new Set(["concise"]);
 export const QUERY_VERSION = "query@1";
 export const RESPONSE_VERSION = "response@1";
 export async function json<T>(path: string | URL): Promise<T> { return JSON.parse(await readFile(path, "utf8")) as T; }

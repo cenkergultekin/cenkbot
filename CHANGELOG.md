@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3 · 2026-10-17
+
+- `policy@2`: a style-only concision miss may request a repair, but cannot suppress an otherwise usable answer after the configured repair limit. Grounding, language, context, non-answer and privacy failures remain blocking.
+- Preserve `acceptedStyleOnly` in the trace instead of misrepresenting an exception as a clean judge pass.
+- Regression cases cover soft-only acceptance and mixed hard/style rejection. Re-evaluate the same 36-case suite against 0.1.2 to measure the effect.
+
 ## 0.1.2 · 2026-10-17
 
 - Preserve provider-reported billing for empty/truncated completions instead of losing it when marking the request failed.

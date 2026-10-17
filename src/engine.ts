@@ -1,6 +1,6 @@
 import { performance } from "node:perf_hooks";
 import { buildPrompt, repairPrompt } from "./prompts.js";
-import { parseStyle, parseTurns } from "./config.js";
+import { parseStyle, parseTurns, SOFT_REPAIR_REASONS } from "./config.js";
 import { RequestError, type Answer, type Config, type Gate, type Generator, type Profile, type Style, type Turn } from "./types.js";
 export function createBot(deps: { generator: Generator; gate?: Gate; config: Config; profile: Profile }) {
   return { async answer(input: { turns: Turn[]; style?: Partial<Style>; signal?: AbortSignal }): Promise<Answer> {
@@ -64,7 +64,12 @@ export function createBot(deps: { generator: Generator; gate?: Gate; config: Con
         attempt.ms = performance.now() - attemptStarted;
         if (attempt.verdict === "send") { result.text = completion.text; return finish(); }
         if (attempt.verdict === "refuse") { result.text = profile.refusal[style.language]; result.status = "refused"; return finish(); }
-        if (index === config.maxRepairs) return unavailable();
+        if (index === config.maxRepairs) {
+          if (attempt.reasons.length && attempt.reasons.every(reason => SOFT_REPAIR_REASONS.has(reason))) {
+            attempt.acceptedStyleOnly = true; result.text = completion.text; return finish();
+          }
+          return unavailable();
+        }
         prompt = repairPrompt(system, completion.text, attempt.reasons);
       } catch (error) {
         if (error instanceof RequestError) result.requests.push(error.record);

@@ -56,6 +56,15 @@ test("second bad draft is withheld", async () => {
   const r = await bot({}, generator(["Yanlış."]), gate(["repair"])).answer({ turns });
   assert.equal(r.status, "unavailable"); assert.equal(r.attempts.length, 2); assert.notEqual(r.text, "Yanlış.");
 });
+test("style-only failure at the repair limit does not suppress a usable answer", async () => {
+  const j = gate(); j.judge = async () => ({ action: "repair", reasons: ["concise"], record: rec("judge") });
+  const r = await bot({}, generator(["Ankara'da, bir bisiklet atölyesi."]), j).answer({ turns });
+  assert.equal(r.status, "ok"); assert.equal(r.attempts.length, 2); assert.equal(r.attempts[1]?.acceptedStyleOnly, true);
+});
+test("a hard defect cannot hide behind a simultaneous style defect", async () => {
+  const j = gate(); j.judge = async () => ({ action: "repair", reasons: ["concise", "grounded"], record: rec("judge") });
+  const r = await bot({}, generator(), j).answer({ turns }); assert.equal(r.status, "unavailable"); assert.equal(r.attempts[1]?.acceptedStyleOnly, undefined);
+});
 test("guard-only experiment does not silently repair", async () => {
   const r = await bot({ maxRepairs: 0 }, generator(), gate(["repair"])).answer({ turns }); assert.equal(r.attempts.length, 1); assert.equal(r.status, "unavailable");
 });

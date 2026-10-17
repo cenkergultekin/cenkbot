@@ -11,17 +11,18 @@ function draw(){
   const run=runs.find(r=>r.id===$('run').value);if(!run)return;
   const before=runs.find(r=>r.id===$('previous').value);
   const compatible=before && before.suiteHash===run.suiteHash && before.evaluatorHash===run.evaluatorHash && before.kind===run.kind;
+  const timingComparable=compatible&&(before.concurrency??1)===(run.concurrency??1)&&before.runtime===run.runtime&&before.platform===run.platform;
   const selected=run.summary.filter(s=>($('model').value==='all'||s.model===$('model').value)&&($('variant').value==='all'||s.variant===$('variant').value));
-  $('provenance').textContent=`${run.version} · ${run.commit.slice(0,7)} · ${run.suiteId}@${run.suiteVersion} · ${run.repeats} tekrar · ${run.runtime}/${run.platform} · ${new Date(run.startedAt).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul'})}`;
+  $('provenance').textContent=`${run.version} · ${run.commit.slice(0,7)} · ${run.suiteId}@${run.suiteVersion} · ${run.repeats} tekrar · ${run.concurrency??1} test işi · ${run.runtime}/${run.platform} · ${new Date(run.startedAt).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul'})}`;
   $('recommendation').textContent=run.recommendation?`Ölçümlere göre aday: ${run.recommendation.model}. Canlı ayar otomatik değiştirilmez.`:'Varsayılan model seçimi için henüz yeterli doğrulanmış sonuç yok.';
   $('summary').replaceChildren();$('quality-bars').replaceChildren();$('repairs').replaceChildren();$('deltas').replaceChildren();
   $('compatibility').textContent=!before?'Karşılaştırılacak bir deney seç.':compatible?'Aynı soru kümesi ve değerlendirici. Pozitif geçme farkı iyileşme demektir.':'Bu deneylerin soru kümesi veya değerlendiricisi farklı; doğrudan skor farkı gösterilmiyor.';
   for(const s of selected){
-    const tr=node('tr');[`${s.model} / ${labels[s.variant]??s.variant}`,`${pct(s.passRate)} · n=${s.n}`,ms(s.p50Ms),ms(s.p95Ms),money(s.costPerPassUsd),`${s.human.mean===null?'bekliyor':pct(s.human.mean)} · ${s.human.reviewed}/${s.n}`].forEach(v=>tr.append(node('td',v)));$('summary').append(tr);
+    const tr=node('tr');[`${s.model} / ${labels[s.variant]??s.variant}`,`${pct(s.passRate)} · n=${s.n}`,pct(s.successRate),ms(s.p50Ms),ms(s.p95Ms),money(s.costPerPassUsd),`${s.human.mean===null?'bekliyor':pct(s.human.mean)} · ${s.human.reviewed}/${s.n}`].forEach(v=>tr.append(node('td',v)));$('summary').append(tr);
     const bar=node('div');const label=node('div',undefined,'bar-label');label.append(node('span',`${s.model} · ${labels[s.variant]??s.variant}`),node('span',`${pct(s.passRate)} [${pct(s.passInterval95[0])}–${pct(s.passInterval95[1])}]`));
     const track=node('div',undefined,'bar-track'),fill=node('div',undefined,'bar-fill');fill.style.setProperty('--bar-width',Math.max(0,Math.min(100,s.passRate*100))+'%');track.append(fill);bar.append(label,track);$('quality-bars').append(bar);
     if(s.curve.length>1){const p=node('p',`${s.model} · ${labels[s.variant]}: kurtarılan ${pct(s.recoveryRate)}, bozulan ${pct(s.regressionRate)}, gereksiz düzeltme ${pct(s.unnecessaryRepairRate)}.`);$('repairs').append(p);for(const step of s.curve)$('repairs').append(node('p',`${step.attempt===0?'ilk taslak':`düzeltme ${step.attempt}`}: ${pct(step.passRate)} · n=${step.n} · ${ms(step.p50AttemptMs)} · aşama maliyeti ${money(step.incrementalCostUsd)} · insan ${pct(step.humanMean)} (${step.humanReviewed??0} inceleme)`,'muted'));}
-    if(compatible){const p=before.summary.find(p=>p.model===s.model&&p.variant===s.variant);if(p){const diff=(s.passRate-p.passRate)*100;$('deltas').append(node('p',`${s.model} · ${labels[s.variant]}: ${diff>=0?'+':''}${diff.toFixed(1)} puan; p95 ${Math.round(s.p95Ms-p.p95Ms)} ms (${p.n}/${s.n} örnek).`,diff>=0?'positive':'negative'));}}
+    if(compatible){const p=before.summary.find(p=>p.model===s.model&&p.variant===s.variant);if(p){const diff=(s.passRate-p.passRate)*100;const timing=timingComparable&&s.p95Ms!==null&&p.p95Ms!==null?`p95 ${Math.round(s.p95Ms-p.p95Ms)} ms`:'hız koşulları farklı, p95 kıyası yok';$('deltas').append(node('p',`${s.model} · ${labels[s.variant]}: ${diff>=0?'+':''}${diff.toFixed(1)} puan; ${timing} (${p.n}/${s.n} örnek).`,diff>=0?'positive':'negative'));}}
   }
   if(!selected.some(s=>s.curve.length>1))$('repairs').append(node('p','Bu seçimde düzeltme eğrisi için sonuç yok.','muted'));
   $('cases').replaceChildren();
@@ -33,7 +34,8 @@ function draw(){
     if($('case-filter').value==='changed'&&(!prior||prior.pass===c.pass))continue;
     const d=node('details');d.append(node('summary',`${c.pass?'geçti':'başarısız'} · ${c.caseId} · ${c.model} · ${labels[c.variant]??c.variant}`));
     d.append(node('p',`${ms(c.totalMs)} · ${money(c.costUsd)} · ${c.category} · tekrar ${c.repeat+1}`,'case-meta'));
-    for(const a of c.attempts)d.append(node('p',`${a.index===0?'ilk taslak':`düzeltme ${a.index}`} · ${a.pass?'geçti':'başarısız'} · ${a.verdict}\n${a.text}`,'answer'));
+    const errors=(c.requests??[]).filter(r=>r.status==='error');if(errors.length)d.append(node('p',errors.map(r=>`${r.purpose}: ${r.error??'istek başarısız'}`).join(' · '),'case-meta'));
+    for(const a of c.attempts)d.append(node('p',`${a.index===0?'ilk taslak':`düzeltme ${a.index}`} · ${a.pass?'geçti':'başarısız'} · ${a.verdict}${a.acceptedStyleOnly?' · yalnız stil kusuru kabul edildi':''}\n${a.text}`,'answer'));
     d.append(node('p',`gönderilen yanıt\n${c.finalText}`,'answer'));
     if(prior)d.append(node('p',`önceki sürüm\n${prior.finalText}`,'answer'));
     $('cases').append(d);if(++count>=100)break;

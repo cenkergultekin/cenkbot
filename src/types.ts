@@ -27,7 +27,7 @@ export interface Gate {
   query(input: { message: string; history: Turn[]; profile: Profile; signal?: AbortSignal }): Promise<QueryVerdict>;
   judge(input: { message: string; history: Turn[]; reply: string; profile: Profile; style: Style; signal?: AbortSignal }): Promise<Verdict>;
 }
-export type Attempt = { index: number; text: string; verdict: "send" | "repair" | "refuse" | "unchecked"; reasons: string[]; ms: number; signals?: Record<string, number> };
+export type Attempt = { index: number; text: string; verdict: "send" | "repair" | "refuse" | "unchecked"; reasons: string[]; ms: number; signals?: Record<string, number>; acceptedStyleOnly?: boolean };
 export type Answer = {
   text: string; status: "ok" | "refused" | "unavailable"; route: "static" | "default" | "reasoning";
   selectedModel: string | null; attempts: Attempt[]; requests: RequestRecord[]; totalMs: number;

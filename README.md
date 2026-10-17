@@ -4,7 +4,7 @@ Small chatbots. Measurable improvements.
 
 Cenkbot is a TypeScript chatbot service with versioned experiments for answer quality, latency and cost. It grew out of the assistant on [cenker.dev](https://cenker.dev). Configure a knowledge profile and speaking style, choose a model, then measure every change against a fixed evaluation suite.
 
-**Status:** development foundation, `0.1.2`. Ten model candidates are selected from a dated OpenRouter catalog snapshot. No optimal-model claim has been published. The default model is provisional. RAG and tool-using agents are future work.
+**Status:** development foundation, `0.1.3`. Ten model candidates are selected from a dated OpenRouter catalog snapshot. No optimal-model claim has been published. The default model is provisional. RAG and tool-using agents are future work.
 
 ## Run locally
 
