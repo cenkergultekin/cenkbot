@@ -4,7 +4,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { loadSettings, json, VERSION, PROMPT_VERSION, POLICY_VERSION, QUERY_VERSION, RESPONSE_VERSION } from "../config.js";
 import { createBot } from "../engine.js";
 import { openRouter } from "../provider.js";
-import { createJev, JEV_MODEL, thresholds, queryQuestions, responseQuestions } from "../jev.js";
+import { createJev, JEV_MODEL, JEV_PRICING, thresholds, queryQuestions, responseQuestions } from "../jev.js";
 import { buildPrompt } from "../prompts.js";
 import { grade, finalGrade, EVALUATOR_VERSION } from "./grade.js";
 import { summaries, recommend } from "./metrics.js";
@@ -30,12 +30,9 @@ export async function main() {
   const budget = new Budget(Number(arg("--budget-usd", "1")));
   const needsJev = variants.some(v => v !== "baseline");
   const total = suite.cases.length * repeats * chosen.length * variants.length;
-  if (plan) { console.log(JSON.stringify({ cases: suite.cases.length, models: chosen.map(m => m.id), repeats, concurrency, variants, turns: total, maxGeneratorRequests: suite.cases.length * repeats * chosen.length * variants.reduce((n, v) => n + (v === "repair2" ? 3 : v === "repair" ? 2 : 1), 0), budgetUsd: budget.maxUsd, jevBilling: needsJev ? "unknown; configure rates before paid full-system eval" : "not used", note: "Reservation budget is a conservative guard, not a provider billing guarantee." }, null, 2)); return; }
+  if (plan) { console.log(JSON.stringify({ cases: suite.cases.length, models: chosen.map(m => m.id), repeats, concurrency, variants, turns: total, maxGeneratorRequests: suite.cases.length * repeats * chosen.length * variants.reduce((n, v) => n + (v === "repair2" ? 3 : v === "repair" ? 2 : 1), 0), budgetUsd: budget.maxUsd, jevBilling: needsJev ? JEV_PRICING : "not used", note: "Reservation budget is a conservative guard, not a provider billing guarantee." }, null, 2)); return; }
   if (!mock && !process.env.OPENROUTER_API_KEY) throw new Error("Set OPENROUTER_API_KEY in the process environment; no secret files are read");
   if (!mock && needsJev && !process.env.TYPESAFE_API_KEY) throw new Error("Set TYPESAFE_API_KEY for Jev variants");
-  // Explicit ceilings per Jev request keep unpriced external calls out of a budgeted run.
-  const jevCeiling = Number(arg("--jev-max-request-usd", "0"));
-  if (!mock && needsJev && (!Number.isFinite(jevCeiling) || jevCeiling <= 0)) throw new Error("Supply --jev-max-request-usd from your billing agreement; actual Jev cost remains unknown until reconciled");
   const id = `${new Date().toISOString().replace(/[:.]/g, "-")}-${randomUUID().slice(0, 8)}`;
   let commit = "uncommitted", dirty = true;
   try { commit = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim(); dirty = !!execFileSync("git", ["status", "--porcelain"], { encoding: "utf8" }).trim(); } catch { /* local first run */ }
@@ -43,7 +40,7 @@ export async function main() {
   const run: Run = { schemaVersion: 1, id, kind: mock ? "mock" : "live", startedAt: new Date().toISOString(), version: VERSION, commit, dirty,
     suiteId: suite.id, suiteVersion: suite.version, suiteHash: hash(suite), profileHash: hash(profile),
     promptHash: hash({ version: PROMPT_VERSION, prompt: buildPrompt(profile, profile.style) }), evaluatorHash: hash({ EVALUATOR_VERSION, evaluatorSource }), configHash: hash(config),
-    policyHash: hash({ POLICY_VERSION, QUERY_VERSION, RESPONSE_VERSION, JEV_MODEL, thresholds, queryQuestions, responseQuestions }), catalogHash: hash(models), runtime: process.version, platform: process.platform,
+    policyHash: hash({ POLICY_VERSION, QUERY_VERSION, RESPONSE_VERSION, JEV_MODEL, JEV_PRICING, thresholds, queryQuestions, responseQuestions }), catalogHash: hash(models), runtime: process.version, platform: process.platform,
     config, models: chosen, variants, repeats, concurrency, suitePublic: suite.public, publicFixture: profile.id === "atlas-public-fixture", status: "partial", rows: [] };
   const root = `eval/runs/${id}`;
   await mkdir(root, { recursive: true });
@@ -58,7 +55,8 @@ export async function main() {
   });
   const generator = mock ? mockGenerator : budget.wrap(openRouter(models), models);
   const originalGate = mock ? mockGate : needsJev ? createJev() : undefined;
-  const gate = originalGate && { query: async (input: Parameters<typeof originalGate.query>[0]) => { if (!mock) budget.reserve(jevCeiling); return originalGate.query(input); }, judge: async (input: Parameters<typeof originalGate.judge>[0]) => { if (!mock) budget.reserve(jevCeiling); return originalGate.judge(input); } };
+  const reserveJev = (input: unknown, questions: unknown) => { if (!mock) budget.reserve((Buffer.byteLength(JSON.stringify(input)) + Buffer.byteLength(JSON.stringify(questions)) + 2048) * JEV_PRICING.inputUsdPerMillion / 1e6); };
+  const gate = originalGate && { query: async (input: Parameters<typeof originalGate.query>[0]) => { reserveJev(input, queryQuestions); return originalGate.query(input); }, judge: async (input: Parameters<typeof originalGate.judge>[0]) => { reserveJev(input, responseQuestions); return originalGate.judge(input); } };
   const jobs: { repeat: number; caseIndex: number; model: typeof chosen[number]; variant: string }[] = [];
   // Every scheduled call is a scored experiment; none competes to serve the same live answer.
   for (let repeat = 0; repeat < repeats; repeat++) for (let caseIndex = 0; caseIndex < suite.cases.length; caseIndex++) {

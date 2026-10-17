@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import type { Config, Model, Profile, Style, Turn } from "./types.js";
-export const VERSION = "0.1.1";
+export const VERSION = "0.1.2";
 export const PROMPT_VERSION = "prompt@1";
 export const POLICY_VERSION = "policy@1";
 export const QUERY_VERSION = "query@1";

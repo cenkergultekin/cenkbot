@@ -4,7 +4,7 @@ Small chatbots. Measurable improvements.
 
 Cenkbot is a TypeScript chatbot service with versioned experiments for answer quality, latency and cost. It grew out of the assistant on [cenker.dev](https://cenker.dev). Configure a knowledge profile and speaking style, choose a model, then measure every change against a fixed evaluation suite.
 
-**Status:** development foundation, `0.1.1`. Ten model candidates are selected from a dated OpenRouter catalog snapshot. No optimal-model claim has been published. The default model is provisional. RAG and tool-using agents are future work.
+**Status:** development foundation, `0.1.2`. Ten model candidates are selected from a dated OpenRouter catalog snapshot. No optimal-model claim has been published. The default model is provisional. RAG and tool-using agents are future work.
 
 ## Run locally
 
@@ -50,8 +50,8 @@ npm run eval -- --mock --models openai/gpt-6-luna --repeats 1
 # Real comparison across ten models, no Jev calls in this baseline.
 npm run eval -- --variants baseline --repeats 3 --budget-usd 1
 
-# Full system: supply an agreed per-request Jev billing ceiling.
-npm run eval -- --variants baseline,query,guarded,repair --repeats 3 --budget-usd 1 --jev-max-request-usd <ceiling>
+# Full system: Jev list-price estimates are included in the reservation budget.
+npm run eval -- --variants baseline,query,guarded,repair --repeats 3 --budget-usd 1
 
 # Prepare public results after inspecting the synthetic fixture run.
 npm run benchmark:publish -- eval/runs/<id>/run.json

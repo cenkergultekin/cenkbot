@@ -11,6 +11,7 @@ import { publicRun } from "../eval/publish.js";
 import { compare } from "../eval/compare.js";
 import { Budget } from "../eval/budget.js";
 import { authorized } from "../server.js";
+import { jevCost } from "../jev.js";
 import type { Run, Row, Case } from "../eval/schema.js";
 
 const { config, profile, models } = await loadSettings();
@@ -99,6 +100,13 @@ test("truncated output is an error and provider response body is not exposed", a
 });
 test("API token is required and compared exactly", () => {
   assert.equal(authorized(undefined, undefined), false); assert.equal(authorized("Bearer secret", "secret"), true); assert.equal(authorized("Bearer wrong", "secret"), false);
+});
+test("Jev cost distinguishes missing usage from measured zero", () => {
+  assert.equal(jevCost(null), null); assert.equal(jevCost(undefined), null); assert.equal(jevCost(0), 0); assert.equal(jevCost(1000000), .042);
+});
+test("truncated completions retain reported billed cost", async () => {
+  const fetcher: typeof fetch = async () => new Response(JSON.stringify({ choices: [{ message: { content: "cut" }, finish_reason: "length" }], usage: { prompt_tokens: 10, completion_tokens: 256, cost: .002 } }));
+  await assert.rejects(() => openRouter(models, "test", fetcher).complete({ model: config.model, system: "test", turns, config, purpose: "draft" }), error => error instanceof RequestError && error.record.status === "error" && error.record.costUsd === .002 && error.record.costSource === "reported");
 });
 test("budget reserves before requests and refuses overspend", async () => {
   let called = false;

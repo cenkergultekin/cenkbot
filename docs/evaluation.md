@@ -38,9 +38,9 @@ Eğri taslak adımı bazında geçme oranı, o adıma ulaşan örnek sayısı, m
 
 ## Maliyet ve bütçe
 
-OpenRouter raporladığı maliyet varsa kullanılır; yoksa token sayısı ve tarihli katalog fiyatından tahmin edilir, `estimated` olarak işaretlenir. Token bilgisi de yoksa maliyet null'dır. Jev fiyatı varsayılmaz; bu sürümde Jev maliyetleri null kalır. Hatalı istek faturalanmış olabilir ve sıfır sayılmaz. Bilinen kısmi toplam ayrıca gösterilir. `costPerPassUsd`, bütün turların maliyetinin geçen yanıt sayısına bölümüdür; başarısız denemeler de dahildir.
+OpenRouter raporladığı maliyet varsa kullanılır; yoksa token sayısı ve tarihli katalog fiyatından tahmin edilir, `estimated` olarak işaretlenir. Token bilgisi de yoksa maliyet null'dır. Jev için 17 Ekim 2026 tarihli resmî liste fiyatı kullanılır: milyon input token başına $0,042, output ücretsiz ([TypeSafe](https://typesafe.ai/)). Token kullanımından çıkan tutar `estimated` olarak etiketlenir, gerçek fatura diye sunulmaz. Kullanım bilgisi yoksa null kalır. Hatalı istek faturalanmış olabilir ve sıfır sayılmaz. Bilinen kısmi toplam ayrıca gösterilir. `costPerPassUsd`, bütün turların maliyetinin geçen yanıt sayısına bölümüdür; başarısız denemeler de dahildir.
 
-CLI varsayılan $1 rezervasyon sınırı uygular; her model çağrısından önce UTF-8 byte sayısı ve protokol payıyla konservatif token tahmini rezerve edilir. Hata olunca rezervasyon geri bırakılmaz. Jev koşularında faturadan alınmış `--jev-max-request-usd` gereklidir. Bu, sağlayıcı tarafı bir fatura üst sınırı değildir. Gerçek harcama sağlayıcı hesabının limitleriyle ayrıca sınırlandırılmalıdır. Jev faturalaması uzlaştırılmadan toplam maliyete dayalı optimal model önerisi oluşmaz.
+CLI varsayılan $1 rezervasyon sınırı uygular; her model çağrısından önce UTF-8 byte sayısı ve protokol payıyla konservatif token tahmini rezerve edilir. Hata olunca rezervasyon geri bırakılmaz. Jev çağrıları için soru seti/state boyutu, protokol payı ve tarihli liste fiyatından rezervasyon yapılır. Bu, sağlayıcı tarafı bir fatura üst sınırı değildir. Gerçek harcama sağlayıcı hesabının limitleriyle ayrıca sınırlandırılmalıdır. Bilinmeyen maliyet varsa toplam maliyete dayalı öneri oluşmaz; liste fiyatı tahminleri fatura ile uzlaştırılmalıdır.
 
 ## İnsan değerlendirmesi
 
@@ -52,7 +52,7 @@ Git dışında `eval/reviews/<run-id>.json` tut:
 ]
 ```
 
-Her boyut 0–4: 0 kullanılamaz, 1 ciddi hata, 2 belirgin kusur, 3 küçük kusur, 4 hedefi karşılıyor. Mümkünse model adını gizleyerek ve yanıt sırasını karıştırarak incele. `attempt` sayısı ile taslaklar da etiketlenebilir; özet insan kalite puanı şu sürümde yalnız `final` etiketlerini kullanır. Aynı reviewer/row/attempt iki kez sayılmaz. Çoklu reviewer önce yanıt başına ortalanır.
+Her boyut 0–4: 0 kullanılamaz, 1 ciddi hata, 2 belirgin kusur, 3 küçük kusur, 4 hedefi karşılıyor. Mümkünse model adını gizleyerek ve yanıt sırasını karıştırarak incele. `attempt` sayısı ile taslaklar da etiketlenebilir; nihai insan kalite puanı `final` etiketlerini, adım eğrileri sayısal attempt etiketlerini kullanır. Aynı reviewer/row/attempt iki kez sayılmaz. Çoklu reviewer önce yanıt başına ortalanır.
 
 Öneri koşulları başlangıç politikasıdır: otomatik geçme ≥%90, kullanılabilirlik ≥%95, p95 ≤6 sn, insan inceleme kapsamı ≥%80, insan ortalaması ≥%80, denetim bozulması sıfır ve toplam maliyet biliniyor. Uygun adaylar başarılı yanıt maliyetine, sonra p95'e göre sıralanır. Bu evrensel optimum değildir; hedefler ve öneri politikası sürümlenerek değişebilir. Hiçbir sonuç canlı modeli otomatik değiştirmez.
 

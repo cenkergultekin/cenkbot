@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.2 · 2026-10-17
+
+- Preserve provider-reported billing for empty/truncated completions instead of losing it when marking the request failed.
+- Add dated Jev list-price estimates from the official TypeSafe site; reserve budget before every query/judge call. Missing usage and error billing remain unknown.
+- Keep human attempt-level scores on correction curves and clarify cost-per-passing-answer units.
+
+
 ## 0.1.1 · 2026-10-17
 
 - Bounded offline experiment concurrency (`--concurrency 1–10`) with one shared reservation budget and serialized checkpoints. Each result is evaluated; no request races to answer a live user.
