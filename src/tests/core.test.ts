@@ -110,7 +110,7 @@ const sample: Case = { id: "city", category: "facts", turns, all: ["ankara"], no
 async function runFixture(): Promise<Run> {
   const result = await bot({ queryGate: false, responseGate: false }).answer({ turns });
   const row: Row = { id: "r:1", caseId: "city", category: "facts", model: config.model, repeat: 0, variant: "baseline", result, finalGrade: finalGrade(sample, result.text, result.status), attemptGrades: result.attempts.map(a => grade(sample, a.text)) };
-  return { schemaVersion: 1, id: "test", kind: "live", startedAt: "2026-10-17T00:00:00Z", version: "0.1.0", commit: "abc123", dirty: false, suiteId: "test", suiteVersion: "1", suiteHash: "same", profileHash: "same", promptHash: "same", evaluatorHash: "same", configHash: "same", policyHash: "same", catalogHash: "same", runtime: process.version, platform: process.platform, config, models, variants: ["baseline"], repeats: 1, suitePublic: true, publicFixture: true, status: "complete", rows: [row] };
+  return { schemaVersion: 1, id: "test", kind: "live", startedAt: "2026-10-17T00:00:00Z", version: config.version, commit: "abc123", dirty: false, suiteId: "test", suiteVersion: "1", suiteHash: "same", profileHash: "same", promptHash: "same", evaluatorHash: "same", configHash: "same", policyHash: "same", catalogHash: "same", runtime: process.version, platform: process.platform, config, models, variants: ["baseline"], repeats: 1, concurrency: 1, suitePublic: true, publicFixture: true, status: "complete", rows: [row] };
 }
 test("failed requests stay in pass denominator and latency", async () => {
   const run = await runFixture(); const failure = structuredClone(run.rows[0]!); failure.id = "r:2"; failure.result.status = "unavailable"; failure.result.totalMs = 12000; failure.finalGrade.pass = false; run.rows.push(failure);
@@ -127,6 +127,9 @@ test("mock, dirty, partial and private runs cannot be published", async () => {
 });
 test("benchmark comparison rejects changed test/evaluator", async () => {
   const run = await runFixture(); assert.throws(() => compare(run, { ...run, suiteHash: "other" })); assert.throws(() => compare(run, { ...run, evaluatorHash: "other" })); assert.equal(compare(run, run)[0]!.passDelta, 0);
+});
+test("latency differences are withheld across concurrency conditions", async () => {
+  const run = await runFixture(); const diff = compare(run, { ...run, concurrency: 4 })[0]!; assert.equal(diff.passDelta, 0); assert.equal(diff.timingComparable, false); assert.equal(diff.p95DeltaMs, null);
 });
 test("repair recovery and regression are paired to the first draft", async () => {
   const run = await runFixture(); const r = run.rows[0]!;

@@ -21,6 +21,8 @@ export async function main() {
   const variants = arg("--variants", "baseline,query,guarded,repair").split(",");
   if (variants.some(v => !["baseline", "query", "guarded", "repair", "repair2"].includes(v)) || new Set(variants).size !== variants.length) throw new Error("Invalid variants");
   const repeats = Number(arg("--repeats", "3"));
+  const concurrency = Number(arg("--concurrency", "1"));
+  if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > 10) throw new Error("Offline eval concurrency must be 1–10");
   if (!Number.isInteger(repeats) || repeats < 1 || repeats > 20) throw new Error("Repeats must be 1–20");
   const selected = arg("--models", "all");
   const chosen = selected === "all" ? models : models.filter(m => selected.split(",").includes(m.id));
@@ -28,7 +30,7 @@ export async function main() {
   const budget = new Budget(Number(arg("--budget-usd", "1")));
   const needsJev = variants.some(v => v !== "baseline");
   const total = suite.cases.length * repeats * chosen.length * variants.length;
-  if (plan) { console.log(JSON.stringify({ cases: suite.cases.length, models: chosen.map(m => m.id), repeats, variants, turns: total, maxGeneratorRequests: suite.cases.length * repeats * chosen.length * variants.reduce((n, v) => n + (v === "repair2" ? 3 : v === "repair" ? 2 : 1), 0), budgetUsd: budget.maxUsd, jevBilling: needsJev ? "unknown; configure rates before paid full-system eval" : "not used", note: "Reservation budget is a conservative guard, not a provider billing guarantee." }, null, 2)); return; }
+  if (plan) { console.log(JSON.stringify({ cases: suite.cases.length, models: chosen.map(m => m.id), repeats, concurrency, variants, turns: total, maxGeneratorRequests: suite.cases.length * repeats * chosen.length * variants.reduce((n, v) => n + (v === "repair2" ? 3 : v === "repair" ? 2 : 1), 0), budgetUsd: budget.maxUsd, jevBilling: needsJev ? "unknown; configure rates before paid full-system eval" : "not used", note: "Reservation budget is a conservative guard, not a provider billing guarantee." }, null, 2)); return; }
   if (!mock && !process.env.OPENROUTER_API_KEY) throw new Error("Set OPENROUTER_API_KEY in the process environment; no secret files are read");
   if (!mock && needsJev && !process.env.TYPESAFE_API_KEY) throw new Error("Set TYPESAFE_API_KEY for Jev variants");
   // Explicit ceilings per Jev request keep unpriced external calls out of a budgeted run.
@@ -42,27 +44,34 @@ export async function main() {
     suiteId: suite.id, suiteVersion: suite.version, suiteHash: hash(suite), profileHash: hash(profile),
     promptHash: hash({ version: PROMPT_VERSION, prompt: buildPrompt(profile, profile.style) }), evaluatorHash: hash({ EVALUATOR_VERSION, evaluatorSource }), configHash: hash(config),
     policyHash: hash({ POLICY_VERSION, QUERY_VERSION, RESPONSE_VERSION, JEV_MODEL, thresholds, queryQuestions, responseQuestions }), catalogHash: hash(models), runtime: process.version, platform: process.platform,
-    config, models: chosen, variants, repeats, suitePublic: suite.public, publicFixture: profile.id === "atlas-public-fixture", status: "partial", rows: [] };
+    config, models: chosen, variants, repeats, concurrency, suitePublic: suite.public, publicFixture: profile.id === "atlas-public-fixture", status: "partial", rows: [] };
   const root = `eval/runs/${id}`;
   await mkdir(root, { recursive: true });
   const cancellation = new AbortController();
   const stop = () => cancellation.abort();
   process.once("SIGINT", stop); process.once("SIGTERM", stop);
-  const save = async () => {
+  let saveQueue = Promise.resolve();
+  const save = () => saveQueue = saveQueue.then(async () => {
     const summary = summaries(run);
     await writeFile(`${root}/run.json`, JSON.stringify(run, null, 2) + "\n");
     await writeFile(`${root}/summary.json`, JSON.stringify({ runId: id, kind: run.kind, status: run.status, budgetReservedUsd: budget.committedUsd, summary, recommendation: recommend(summary) }, null, 2) + "\n");
-  };
+  });
   const generator = mock ? mockGenerator : budget.wrap(openRouter(models), models);
   const originalGate = mock ? mockGate : needsJev ? createJev() : undefined;
   const gate = originalGate && { query: async (input: Parameters<typeof originalGate.query>[0]) => { if (!mock) budget.reserve(jevCeiling); return originalGate.query(input); }, judge: async (input: Parameters<typeof originalGate.judge>[0]) => { if (!mock) budget.reserve(jevCeiling); return originalGate.judge(input); } };
-  try {
-    // Rotate model order by repeat and case to reduce systematic time-of-day/rate-limit bias.
-    for (let repeat = 0; repeat < repeats; repeat++) for (let caseIndex = 0; caseIndex < suite.cases.length; caseIndex++) {
+  const jobs: { repeat: number; caseIndex: number; model: typeof chosen[number]; variant: string }[] = [];
+  // Every scheduled call is a scored experiment; none competes to serve the same live answer.
+  for (let repeat = 0; repeat < repeats; repeat++) for (let caseIndex = 0; caseIndex < suite.cases.length; caseIndex++) {
+    const offset = (repeat + caseIndex) % chosen.length;
+    for (const model of [...chosen.slice(offset), ...chosen.slice(0, offset)]) for (const variant of variants) jobs.push({ repeat, caseIndex, model, variant });
+  }
+  let nextJob = 0;
+  let failure: Error | null = null;
+  const worker = async () => {
+    while (nextJob < jobs.length && !failure) {
+      const { repeat, caseIndex, model: m, variant } = jobs[nextJob++]!;
       const c = suite.cases[caseIndex]!;
-      const offset = (repeat + caseIndex) % chosen.length;
-      const order = [...chosen.slice(offset), ...chosen.slice(0, offset)];
-      for (const m of order) for (const variant of variants) {
+      try {
         if (cancellation.signal.aborted) throw new Error("Eval interrupted; partial run saved");
         if (!mock && budget.committedUsd >= budget.maxUsd) throw new Error("Eval budget exhausted");
         const experimentConfig = { ...config, model: m.id, reasoningModel: undefined, queryGate: variant !== "baseline", responseGate: ["guarded", "repair", "repair2"].includes(variant), maxRepairs: variant === "repair2" ? 2 : variant === "repair" ? 1 : 0 };
@@ -72,8 +81,12 @@ export async function main() {
         if (budget.exhausted) throw new Error("Eval budget exhausted; partial run saved");
         if (cancellation.signal.aborted) throw new Error("Eval interrupted; partial run saved");
         if (run.rows.length % Math.max(10, Math.ceil(total / 20)) === 0) { await save(); console.log(`${run.rows.length}/${total} turns saved`); }
-      }
+      } catch (error) { failure = error instanceof Error ? error : new Error("Eval worker failed"); }
     }
+  };
+  try {
+    await Promise.all(Array.from({ length: concurrency }, worker));
+    if (failure) throw failure;
     run.status = "complete";
   } finally { run.finishedAt = new Date().toISOString(); await save(); process.removeListener("SIGINT", stop); process.removeListener("SIGTERM", stop); }
   console.log(`${run.kind.toUpperCase()} run saved: ${root}; ${run.rows.length} turns. ${mock ? "Not publishable; no model quality measured." : "Human review required before model promotion."}`);

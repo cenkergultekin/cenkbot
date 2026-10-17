@@ -4,7 +4,7 @@ Small chatbots. Measurable improvements.
 
 Cenkbot is a TypeScript chatbot service with versioned experiments for answer quality, latency and cost. It grew out of the assistant on [cenker.dev](https://cenker.dev). Configure a knowledge profile and speaking style, choose a model, then measure every change against a fixed evaluation suite.
 
-**Status:** development foundation, `0.1.0`. Ten model candidates are selected from a dated OpenRouter catalog snapshot. No live benchmark or optimal-model claim has been published yet. The default model is provisional. RAG and tool-using agents are future work.
+**Status:** development foundation, `0.1.1`. Ten model candidates are selected from a dated OpenRouter catalog snapshot. No optimal-model claim has been published. The default model is provisional. RAG and tool-using agents are future work.
 
 ## Run locally
 
@@ -62,7 +62,7 @@ npm run benchmark:compare -- eval/runs/<old>/run.json eval/runs/<new>/run.json
 
 On PowerShell systems whose `npm.ps1` wrapper consumes CLI arguments, use `npm.cmd run eval -- ...` or `node node_modules/tsx/dist/cli.mjs src/eval/cli.ts ...`.
 
-Model calls are sequential, including eval. Interrupted/budget-limited runs remain partial and cannot masquerade as complete benchmarks. Raw run files are ignored by Git; published summaries are append-only in `eval/public.json`. The benchmark page reads this file, not a live inference API.
+Live model calls are sequential. Offline eval can use `--concurrency 1–10` to process independent scored experiments; the default is one. This never races redundant calls to serve a user. Concurrency is recorded and must match for latency comparisons. Interrupted/budget-limited runs remain partial and cannot masquerade as complete benchmarks. Raw run files are ignored by Git; published summaries are append-only in `eval/public.json`. The benchmark page reads this file, not a live inference API.
 
 ## Customize
 

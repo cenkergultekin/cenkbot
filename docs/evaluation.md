@@ -10,7 +10,7 @@
 | repair | Jev | Jev | 1 |
 | repair2 | Jev | Jev | 2; yalnız deney |
 
-Selam kısayolu bütün koşullarda aynıdır. Dolayısıyla baseline saf model leaderboard'u değildir: aynı minimal chatbotun gatesiz halidir. Model karşılaştırması aynı koşul altında yapılır. Deney sırasında reasoningModel kapalıdır; her model kendisine verilen soruları yanıtlar. Canlı model yarışmaz; eval de sırayla çalışır.
+Selam kısayolu bütün koşullarda aynıdır. Dolayısıyla baseline saf model leaderboard'u değildir: aynı minimal chatbotun gatesiz halidir. Model karşılaştırması aynı koşul altında yapılır. Deney sırasında reasoningModel kapalıdır; her model kendisine verilen soruları yanıtlar. Canlı model yarışmaz. Offline eval varsayılan sırayla çalışır; `--concurrency 1–10` bağımsız, her biri puanlanan deneyleri paralel yürütür. Bu, tek kullanıcı yanıtı için yarış değildir ve test çağrı sayısını artırmaz. Eşzamanlılık run metadata'sında kayıtlıdır; farklı concurrency veya runtime/platform koşullarında p95 farkı karşılaştırma komutunda gösterilmez.
 
 Sabit başlangıç kümesi 36 sentetik soru içerir: olgular, bilinmeyenler, gizlilik, taahhüt, yanlış öncül, bağlam, dil, stil, sosyal konuşma, injection ve kapsam. Varsayılan üç tekrar ile on modelin baseline'ı 1080 tur; dört mekanizma birlikte 4320 turdur. Hazır yanıtlar model çağrısı üretmeyebilir. Tam çalışma maliyeti çağrı sayısıyla aynı değildir.
 

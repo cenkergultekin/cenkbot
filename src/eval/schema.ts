@@ -13,6 +13,7 @@ export type Run = {
   suiteHash: string; profileHash: string; promptHash: string; evaluatorHash: string;
   configHash: string; policyHash: string; catalogHash: string; runtime: string; platform: string;
   config: Config; models: Model[]; variants: string[]; repeats: number;
+  concurrency: number;
   suitePublic: boolean; publicFixture: boolean; status: "complete" | "partial";
   rows: Row[];
 };

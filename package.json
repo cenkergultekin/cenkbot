@@ -1,6 +1,6 @@
 {
   "name": "cenkbot",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Small chatbots with versioned quality, latency and cost experiments.",
   "type": "module",
   "exports": "./dist/index.js",

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1 · 2026-10-17
+
+- Bounded offline experiment concurrency (`--concurrency 1–10`) with one shared reservation budget and serialized checkpoints. Each result is evaluated; no request races to answer a live user.
+- Record concurrency as an experimental condition. Default remains one; latency comparisons require matching concurrency.
+- Initial interrupted 0.1.0 live probe remains a private partial record, not a published benchmark.
+
 ## 0.1.0 · 2026-10-17
 
 - Independent TypeScript chatbot core and authenticated HTTP service, derived from cenker.dev's engineering approach.
