@@ -1,21 +1,21 @@
 {
   "name": "cenkbot",
-  "version": "0.1.3",
-  "description": "Small chatbots with versioned quality, latency and cost experiments.",
+  "version": "0.2.0",
+  "description": "A small, embeddable portfolio chatbot with local RAG, OpenRouter and optional Jev review.",
   "type": "module",
   "exports": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "private": true,
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/cenkergultekin/cenkbot.git" },
+  "files": ["dist/index.*", "dist/config.*", "dist/types.*", "dist/prompts.*", "dist/provider.*", "dist/jev.*", "dist/engine.*", "dist/portfolio.*", "dist/limits.*", "dist/server.*", "dist/steps", "public", "assets", "config", "content", "docs", "examples", ".env.example", "LICENSE", "README.md"],
   "engines": { "node": ">=22" },
   "scripts": {
     "check": "tsc --noEmit",
     "build": "tsc",
     "test": "tsx --test src/tests/*.test.ts",
-    "start": "tsx src/server.ts",
-    "eval": "tsx src/eval/cli.ts",
-    "models": "tsx src/eval/catalog.ts",
-    "benchmark:publish": "tsx src/eval/publish.ts",
-    "benchmark:compare": "tsx src/eval/compare.ts"
+    "prestart": "npm run build",
+    "start": "node --env-file-if-exists=.env.local dist/server.js",
+    "dev": "node --env-file-if-exists=.env.local --import tsx --watch src/server.ts"
   },
   "dependencies": { "@typesafe-ai/sdk": "0.7.0" },
   "devDependencies": { "@types/node": "^22.0.0", "tsx": "^4.0.0", "typescript": "^5.9.0" }

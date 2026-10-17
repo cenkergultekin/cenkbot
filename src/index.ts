@@ -4,3 +4,7 @@ export { createJev } from "./jev.js";
 export { buildPrompt } from "./prompts.js";
 export { VERSION, parseStyle, parseTurns, validateConfig } from "./config.js";
 export type { Answer, Config, Gate, Generator, Model, Profile, Style, Turn } from "./types.js";
+export { createLocalRetriever } from "./steps/retrieve.js";
+export { createPortfolioBot } from "./portfolio.js";
+export type { Retriever, Source } from "./types.js";
+export { TrafficGuard } from "./limits.js";

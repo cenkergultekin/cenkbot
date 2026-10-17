@@ -1,0 +1,11 @@
+{
+  "version": "0.2.0",
+  "model": "openrouter/free",
+  "queryGate": false,
+  "responseGate": false,
+  "maxRepairs": 0,
+  "maxTokens": 256,
+  "timeoutMs": 12000,
+  "temperature": 0,
+  "gateFailure": "closed"
+}

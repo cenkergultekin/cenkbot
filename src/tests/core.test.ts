@@ -5,15 +5,8 @@ import { createBot } from "../engine.js";
 import { openRouter } from "../provider.js";
 import { buildPrompt } from "../prompts.js";
 import { RequestError, type Config, type Gate, type Generator, type RequestRecord } from "../types.js";
-import { summaries, quantile, recommend, validateReviews } from "../eval/metrics.js";
-import { grade, finalGrade } from "../eval/grade.js";
-import { publicRun } from "../eval/publish.js";
-import { compare } from "../eval/compare.js";
-import { Budget } from "../eval/budget.js";
 import { authorized } from "../server.js";
 import { jevCost } from "../jev.js";
-import { benchmarkView } from "../benchmark-view.js";
-import type { Run, Row, Case } from "../eval/schema.js";
 
 const { config, profile, models } = await loadSettings();
 const turns = [{ role: "user" as const, content: "Hangi şehirde?" }];
@@ -23,7 +16,7 @@ const gate = (verdicts: ("send" | "repair" | "refuse")[] = ["send"]): Gate => { 
   async query() { return { action: "answer", complexity: "lookup", confidence: 1, formal: false, record: rec("query", null) }; },
   async judge() { const action = verdicts[Math.min(i++, verdicts.length - 1)]!; return { action, reasons: action === "repair" ? ["grounded"] : [], record: rec("judge", null) }; },
 }; };
-const bot = (c: Partial<Config> = {}, g = generator(), j: Gate | undefined = gate()) => createBot({ config: { ...config, ...c }, profile, generator: g, gate: j });
+const bot = (c: Partial<Config> = {}, g = generator(), j: Gate | undefined = gate()) => createBot({ config: { ...config, queryGate: true, responseGate: true, maxRepairs: 1, ...c }, profile, generator: g, gate: j });
 
 test("whole greeting has no external calls", async () => {
   const b = bot({}, { complete: async () => { throw Error("Must not call"); } });
@@ -45,7 +38,7 @@ test("reasoning chooses one configured model without speculative default call", 
   const j = gate(); j.query = async () => ({ action: "answer", complexity: "reason", confidence: .95, formal: false, record: rec("query") });
   const seen: string[] = [];
   const g: Generator = { async complete(input) { seen.push(input.model); return { text: "Ankara.", record: rec(input.purpose) }; } };
-  await bot({ reasoningModel: models[1]!.id }, g, j).answer({ turns }); assert.deepEqual(seen, [models[1]!.id]);
+  await bot({ reasoningModel: "test/reasoning" }, g, j).answer({ turns }); assert.deepEqual(seen, ["test/reasoning"]);
 });
 test("repair carries actual draft and reasons, no concurrent generator calls", async () => {
   let active = false, count = 0;
@@ -118,86 +111,4 @@ test("truncated completions retain reported billed cost", async () => {
   const fetcher: typeof fetch = async () => new Response(JSON.stringify({ choices: [{ message: { content: "cut" }, finish_reason: "length" }], usage: { prompt_tokens: 10, completion_tokens: 256, cost: .002 } }));
   await assert.rejects(() => openRouter(models, "test", fetcher).complete({ model: config.model, system: "test", turns, config, purpose: "draft" }), error => error instanceof RequestError && error.record.status === "error" && error.record.costUsd === .002 && error.record.costSource === "reported");
 });
-test("budget reserves before requests and refuses overspend", async () => {
-  let called = false;
-  const g: Generator = { async complete() { called = true; return { text: "x", record: rec("draft") }; } };
-  const b = new Budget(.000000001); await assert.rejects(() => b.wrap(g, models).complete({ model: config.model, system: "x", turns, config, purpose: "draft" })); assert.equal(called, false); assert.equal(b.exhausted, true);
-});
 
-const sample: Case = { id: "city", category: "facts", turns, all: ["ankara"], none: ["istanbul"] };
-async function runFixture(): Promise<Run> {
-  const result = await bot({ queryGate: false, responseGate: false }).answer({ turns });
-  const row: Row = { id: "r:1", caseId: "city", category: "facts", model: config.model, repeat: 0, variant: "baseline", result, finalGrade: finalGrade(sample, result.text, result.status), attemptGrades: result.attempts.map(a => grade(sample, a.text)) };
-  return { schemaVersion: 1, id: "test", kind: "live", startedAt: "2026-10-17T00:00:00Z", version: config.version, commit: "abc123", dirty: false, suiteId: "test", suiteVersion: "1", suiteHash: "same", profileHash: "same", promptHash: "same", evaluatorHash: "same", configHash: "same", policyHash: "same", catalogHash: "same", runtime: process.version, platform: process.platform, config, models, variants: ["baseline"], repeats: 1, concurrency: 1, suitePublic: true, publicFixture: true, status: "complete", rows: [row] };
-}
-test("failed requests stay in pass denominator and latency", async () => {
-  const run = await runFixture(); const failure = structuredClone(run.rows[0]!); failure.id = "r:2"; failure.result.status = "unavailable"; failure.result.totalMs = 12000; failure.finalGrade.pass = false; run.rows.push(failure);
-  const s = summaries(run)[0]!; assert.equal(s.n, 2); assert.equal(s.passRate, .5); assert.equal(s.p95Ms, 12000); assert.equal(s.successRate, .5);
-});
-test("empty latency is null, not zero", () => { assert.equal(quantile([], .95), null); });
-test("model promotion requires human reviews", async () => { const s = summaries(await runFixture()); assert.equal(recommend(s), null); assert.equal(s[0]!.human.mean, null); });
-test("human reviews validate scores and deduplicate reviewer/target", async () => {
-  const run = await runFixture(); const review = { rowId: "r:1", attempt: "final" as const, reviewer: "reviewer-a", language: 4, factuality: 4, relevance: 4, tone: 4 };
-  assert.equal(summaries(run, [review])[0]!.human.mean, 1); assert.throws(() => validateReviews([review, review], run.rows)); assert.throws(() => validateReviews([{ ...review, language: 5 }], run.rows));
-});
-test("mock, dirty, partial and private runs cannot be published", async () => {
-  const run = await runFixture(); for (const change of [{kind:"mock"},{dirty:true},{status:"partial"},{suitePublic:false},{publicFixture:false}] as const) assert.throws(() => publicRun({ ...run, ...change }));
-});
-test("benchmark comparison rejects changed test/evaluator", async () => {
-  const run = await runFixture(); assert.throws(() => compare(run, { ...run, suiteHash: "other" })); assert.throws(() => compare(run, { ...run, evaluatorHash: "other" })); assert.equal(compare(run, run)[0]!.passDelta, 0);
-});
-test("latency differences are withheld across concurrency conditions", async () => {
-  const run = await runFixture(); const diff = compare(run, { ...run, concurrency: 4 })[0]!; assert.equal(diff.passDelta, 0); assert.equal(diff.timingComparable, false); assert.equal(diff.p95DeltaMs, null);
-});
-test("repair recovery and regression are paired to the first draft", async () => {
-  const run = await runFixture(); const r = run.rows[0]!;
-  r.result.attempts.push({ index: 1, text: "Ankara.", verdict: "send", reasons: [], ms: 5 });
-  r.attemptGrades = [grade(sample, "İstanbul."), grade(sample, "Ankara.")];
-  let s = summaries(run)[0]!; assert.equal(s.recoveryRate, 1); assert.equal(s.regressionRate, null); assert.equal(s.curve.length, 2);
-  r.attemptGrades = [grade(sample, "Ankara."), grade(sample, "İstanbul.")]; r.finalGrade.pass = false;
-  s = summaries(run)[0]!; assert.equal(s.regressionRate, 1); assert.equal(s.unnecessaryRepairRate, 1);
-});
-
-test("benchmark presentation omits raw text and keeps failures out of response latency", async () => {
-  const run = await runFixture();
-  const failure = structuredClone(run.rows[0]!);
-  failure.id = "r:2";
-  failure.result.status = "unavailable";
-  failure.result.totalMs = 1;
-  failure.result.text = "PRIVATE_SENTINEL";
-  failure.result.unknownCostRequests = 1;
-  failure.finalGrade.pass = false;
-  failure.result.requests.push({ ...rec("draft"), status: "error", error: "OpenRouter HTTP 403" });
-  run.rows.push(failure);
-  const published = publicRun(run);
-  const original = JSON.stringify(published);
-  const view = benchmarkView({ schemaVersion: 1, runs: [published] });
-  const summary = view.runs[0]!.summary[0]!;
-  assert.equal(summary.passRate, .5);
-  assert.equal(summary.answerN, 1);
-  assert.equal(summary.latencyMs, run.rows[0]!.result.totalMs);
-  assert.equal(summary.costPerPassUsd, null);
-  assert.equal(view.runs[0]!.blocked, true);
-  assert.equal("cases" in view.runs[0]!, false);
-  assert.equal(JSON.stringify(view).includes("PRIVATE_SENTINEL"), false);
-  assert.equal(JSON.stringify(published), original);
-});
-
-test("presentation correction curve keeps the first-draft cohort and separates delivery", async () => {
-  const run = await runFixture();
-  const repaired = structuredClone(run.rows[0]!);
-  repaired.id = "r:2";
-  repaired.result.attempts.push({ index: 1, text: "Ankara.", verdict: "send", reasons: [], ms: 5 });
-  repaired.attemptGrades = [grade(sample, "İstanbul."), grade(sample, "Ankara.")];
-  const withheld = structuredClone(repaired);
-  withheld.id = "r:3";
-  withheld.result.attempts.push({ index: 2, text: "Ankara.", verdict: "send", reasons: [], ms: 5 });
-  withheld.attemptGrades = [grade(sample, "İstanbul."), grade(sample, "İstanbul."), grade(sample, "Ankara.")];
-  withheld.result.status = "unavailable";
-  withheld.finalGrade.pass = false;
-  run.rows.push(repaired, withheld);
-  const curve = benchmarkView({ schemaVersion: 1, runs: [publicRun(run)] }).runs[0]!.summary[0]!.correction;
-  assert.equal(curve.n, 3);
-  assert.deepEqual(curve.stages, [1/3, 2/3, 1]);
-  assert.equal(curve.sentRate, 2/3);
-});

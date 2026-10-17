@@ -1,49 +1,12 @@
 # Changelog
 
-## Benchmark presentation 2 · 2026-10-18
+## 0.2.0 · 2026-10-18
 
-- Replace the analysis dashboard with three focused sections: models, response review, releases. Follow the supplied Astra reference with a dark palette, compact tabs and one chart per section.
-- Remove raw traces, large tables and run/config controls from the product page. Keep the full experiment export in the repository.
-- Serve aggregate-only presentation schema 2; preserve immutable schema-1 experiment records and chatbot behavior version 0.1.3.
-- Share the projection between the service and site snapshot; test withheld-answer latency and fixed-cohort correction/delivery separation. No paid eval was run.
+- Reframe Cenkbot as a reusable portfolio chatbot rather than a personal evaluation project.
+- Add local document retrieval, an explicit four-step pipeline and a drop-in Cenkbot widget.
+- Offer basic single-model RAG and optional Jev-reviewed replies with one bounded rewrite.
+- Add server-side keys, exact-origin access, small-instance traffic limits and integration examples.
+- Introduce the original Cenkbot icon as a transparent 3D README illustration.
+- Move personal benchmarks and result presentation outside this repository. Maintainer `.github` and agent setup remain local and ignored.
 
-## Benchmark presentation · 2026-10-17
-
-- Capability tabs, per-model mechanism comparisons, quality/latency and quality/cost plots, and an interactive release history replace the initial table-first layout.
-- Correction graphics distinguish fixed-cohort draft progress from final delivery. Conditional stage samples and paired-rate denominators remain inspectable.
-- Response latency excludes unavailable, withheld and static-greeting turns; the original failure-inclusive table remains available. Access/quota-blocked runs cannot appear as fast winners or causal release improvements.
-- No chatbot behavior, historical result or model configuration changed. No paid eval was run for this presentation revision; chatbot version remains 0.1.3.
-
-## 0.1.3 · 2026-10-17
-
-- `policy@2`: a style-only concision miss may request a repair, but cannot suppress an otherwise usable answer after the configured repair limit. Grounding, language, context, non-answer and privacy failures remain blocking.
-- Preserve `acceptedStyleOnly` in the trace instead of misrepresenting an exception as a clean judge pass.
-- Regression cases cover soft-only acceptance and mixed hard/style rejection. Re-evaluate the same 36-case suite against 0.1.2 to measure the effect.
-- The 540-turn live rerun encountered 404 OpenRouter HTTP 403 failures; it is retained as an access/quota-affected experiment, not proof of the fix's live quality gain. Further paid runs were stopped.
-
-## 0.1.2 · 2026-10-17
-
-- Preserve provider-reported billing for empty/truncated completions instead of losing it when marking the request failed.
-- Add dated Jev list-price estimates from the official TypeSafe site; reserve budget before every query/judge call. Missing usage and error billing remain unknown.
-- Keep human attempt-level scores on correction curves and clarify cost-per-passing-answer units.
-
-
-## 0.1.1 · 2026-10-17
-
-- Bounded offline experiment concurrency (`--concurrency 1–10`) with one shared reservation budget and serialized checkpoints. Each result is evaluated; no request races to answer a live user.
-- Record concurrency as an experimental condition. Default remains one; latency comparisons require matching concurrency.
-- Initial interrupted 0.1.0 live probe remains a private partial record, not a published benchmark.
-
-## 0.1.0 · 2026-10-17
-
-- Independent TypeScript chatbot core and authenticated HTTP service, derived from cenker.dev's engineering approach.
-- One selected model after Jev routing; no provider race, speculative draft or automatic model/provider fallback.
-- Configurable knowledge/scope and allowlisted tone, detail, language and capitalization preferences.
-- Jev query and response gates with one sequential live repair; two-repair offline experiment.
-- Ten catalog-verified model candidates, 36 public synthetic test cases, repeatable experiment variants and budget reservations.
-- Versioned run metadata, objective grading, failure-inclusive latency/pass metrics, correction recovery/regression and human review import.
-- Immutable public result preparation and benchmark filters for model, variant and previous compatible run.
-- `/cenkbot` introduction and `/cenkbot/benchmark` pages with honest empty states.
-- Offline CI, tests, operating limits and contribution documentation.
-
-No real model benchmark has been run. No optimal default has been selected. RAG, retrieval indexes and tool-using agents are not implemented in this release.
+Earlier 0.1.x experiments remain recoverable in Git history and in the maintainer’s separate research archive.

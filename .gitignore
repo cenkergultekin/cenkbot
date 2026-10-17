@@ -5,3 +5,11 @@ eval/runs/
 eval/reviews/
 *.log
 coverage/
+
+.github/
+.claude/
+.codex/
+AGENTS.md
+.cache/
+eval/
+!.env.example

@@ -5,7 +5,11 @@ export type Profile = {
   style: Style; greeting: { tr: string; en: string };
   refusal: { tr: string; en: string }; unavailable: { tr: string; en: string };
 };
-export type Model = { id: string; provider?: string; inputUsdPerMillion: number; outputUsdPerMillion: number; role: string };
+export type Model = { id: string; provider?: string; inputUsdPerMillion?: number; outputUsdPerMillion?: number; role?: string };
+export type Source = { id: string; title: string; text: string; url?: string };
+export interface Retriever {
+  retrieve(input: { message: string; history: Turn[]; signal?: AbortSignal }): Promise<Source[]>;
+}
 export type Config = {
   version: string; model: string; reasoningModel?: string; queryGate: boolean; responseGate: boolean;
   maxRepairs: number; maxTokens: number; timeoutMs: number; temperature: number;
@@ -32,6 +36,7 @@ export type Answer = {
   text: string; status: "ok" | "refused" | "unavailable"; route: "static" | "default" | "reasoning";
   selectedModel: string | null; attempts: Attempt[]; requests: RequestRecord[]; totalMs: number;
   costUsd: number | null; knownCostUsd: number; unknownCostRequests: number; gateDegraded: boolean;
+  sources: Source[];
 };
 export class RequestError extends Error {
   constructor(message: string, readonly record: RequestRecord) { super(message); }

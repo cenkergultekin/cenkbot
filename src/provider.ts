@@ -24,7 +24,7 @@ export function openRouter(models: Model[], apiKey = process.env.OPENROUTER_API_
       const usage = data.usage;
       const knownTokens = typeof usage?.prompt_tokens === "number" && typeof usage?.completion_tokens === "number";
       const reported = typeof usage?.cost === "number" && Number.isFinite(usage.cost) && usage.cost >= 0;
-      const estimated = knownTokens ? (usage!.prompt_tokens! * model.inputUsdPerMillion + usage!.completion_tokens! * model.outputUsdPerMillion) / 1e6 : null;
+      const estimated = knownTokens && typeof model.inputUsdPerMillion === "number" && typeof model.outputUsdPerMillion === "number" ? (usage!.prompt_tokens! * model.inputUsdPerMillion + usage!.completion_tokens! * model.outputUsdPerMillion) / 1e6 : null;
       const record: RequestRecord = { ...base, model: data.model ?? input.model, provider: data.provider ?? model.provider, status: "ok", ms: performance.now() - started, inputTokens: usage?.prompt_tokens, outputTokens: usage?.completion_tokens, costUsd: reported ? usage!.cost! : estimated, costSource: reported ? "reported" : estimated === null ? "unknown" : "estimated" };
       received = record;
       if (typeof choice?.message?.content !== "string" || !choice.message.content.trim() || choice.finish_reason === "length") throw new Error("Empty or truncated completion");
