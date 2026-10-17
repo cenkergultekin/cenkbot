@@ -12,7 +12,7 @@ Eval için production'dan ayrı bir sağlayıcı anahtarı ve istek/token/harcam
 
 ## cenker.dev
 
-Tanıtım `/cenkbot`, sonuçlar `/cenkbot/benchmark`. Standalone servis bu sayfaları zaten sunar; cenker.dev için hazırlanan ayrı dal aynı statik kaynakları route handler ile sunabilir. `/cenkbot/data.json` yalnız incelenmiş `eval/public.json` dosyasını verir. Böylece benchmark sayfası API çağrısı tüketmez ve chatbot servisi kapalıyken de çalışır.
+Tanıtım `/cenkbot`, sonuçlar `/cenkbot/benchmark`. Standalone servis sayfaları ve `benchmarkView` ile üretilen şema-2 grafik özetini sunar. `/cenkbot/data.json` ham yanıt, istek izi veya runtime/config içermez. Tam değişmez deney kaydı repodaki `eval/public.json` içinde kalır. cenker.dev aynı dönüştürücüyü build sonrası sync scriptinde kullanır; statik snapshot sayesinde site benchmark'ı chatbot servisi kapalıyken de çalışır. Sayfa ziyareti model çağırmaz.
 
 Yayınlanan deney eklendiğinde cenker.dev içindeki snapshot aynı commit/PR ile güncellenmelidir. Sonuç kaynağı GitHub'daki Cenkbot public export'tur; raw üretim konuşmaları değildir. Yeni sonuçların sayfada görünmesi kontrollü snapshot yayınıyla olur; ziyaretçi başına otomatik yeni deney yapılmaz.
 

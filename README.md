@@ -18,7 +18,7 @@ npm run build
 npm start
 ```
 
-Visit `http://127.0.0.1:3400/cenkbot` and `/cenkbot/benchmark`. Pages work without credentials and explicitly show when measurements are missing.
+Visit `http://127.0.0.1:3400/cenkbot` and `/cenkbot/benchmark`. Pages work without credentials and explicitly show when measurements are missing. The benchmark presents three focused comparisons: models, response review, and releases; one chart is visible per section.
 
 Chat requires `OPENROUTER_API_KEY`, `TYPESAFE_API_KEY` and `CENKBOT_SERVICE_TOKEN` in the process environment. The server never reads secret files. Keep credentials on the server. Use a random service token of at least 24 characters. Requests use `Authorization: Bearer <service-token>`.
 
@@ -62,7 +62,7 @@ npm run benchmark:compare -- eval/runs/<old>/run.json eval/runs/<new>/run.json
 
 On PowerShell systems whose `npm.ps1` wrapper consumes CLI arguments, use `npm.cmd run eval -- ...` or `node node_modules/tsx/dist/cli.mjs src/eval/cli.ts ...`.
 
-Live model calls are sequential. Offline eval can use `--concurrency 1–10` to process independent scored experiments; the default is one. This never races redundant calls to serve a user. Concurrency is recorded and must match for latency comparisons. Interrupted/budget-limited runs remain partial and cannot masquerade as complete benchmarks. Raw run files are ignored by Git; published summaries are append-only in `eval/public.json`. The benchmark page reads this file, not a live inference API.
+Live model calls are sequential. Offline eval can use `--concurrency 1–10` to process independent scored experiments; the default is one. This never races redundant calls to serve a user. Concurrency is recorded and must match for latency comparisons. Interrupted/budget-limited runs remain partial and cannot masquerade as complete benchmarks. Raw run files are ignored by Git; reviewed public experiments are append-only in `eval/public.json` (schema 1). The benchmark browser receives an aggregate-only projection through `/cenkbot/data.json` (presentation schema 2), without response texts or request traces; no live inference is involved.
 
 ## Customize
 
