@@ -111,4 +111,3 @@ test("truncated completions retain reported billed cost", async () => {
   const fetcher: typeof fetch = async () => new Response(JSON.stringify({ choices: [{ message: { content: "cut" }, finish_reason: "length" }], usage: { prompt_tokens: 10, completion_tokens: 256, cost: .002 } }));
   await assert.rejects(() => openRouter(models, "test", fetcher).complete({ model: config.model, system: "test", turns, config, purpose: "draft" }), error => error instanceof RequestError && error.record.status === "error" && error.record.costUsd === .002 && error.record.costSource === "reported");
 });
-
