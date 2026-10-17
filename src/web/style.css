@@ -10,3 +10,5 @@ h3{font-size:16px;letter-spacing:-.02em;margin:0 0 18px;font-weight:600}.section
 .correction-curve{margin:22px 0}.correction-curve figcaption{margin-top:4px;font-size:11px}.benchmark-header{padding-top:64px}.benchmark-header h1{font-size:clamp(48px,10vw,112px)}
 
 .mechanism-charts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px}.mechanism-charts .bar-row{margin:18px 0}.mechanism-charts .bar-label{font-size:12px;gap:8px}.mechanism-charts .bar-label span:last-child{font-size:11px}.mechanism-charts h3{overflow-wrap:anywhere}@media(max-width:760px){.mechanism-charts{grid-template-columns:1fr;gap:30px}}
+
+.delta-list{display:grid;grid-template-columns:1fr 1fr;gap:28px 48px}.version-pair .bar-row{margin:16px 0}.filters select{min-height:44px}@media(max-width:760px){.delta-list{grid-template-columns:1fr}}
