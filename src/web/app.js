@@ -11,7 +11,7 @@ const short = model => model.split('/').pop();
 const names = { baseline: 'tek model', query: 'Jev yönlendirme', guarded: 'yanıt denetimi', repair: 'tek düzeltme', repair2: 'iki düzeltme' };
 const option = (value, text) => { const el = node('option', text); el.value = value; return el; };
 let runs = [], modelRun, gateRun, current, previous;
-let metric = 'pass', gateView = 'pass';
+let metric = 'pass', gateView = 'pass', expanded = false;
 
 function bars(target, entries, format, percent = false) {
   const root = $(target);
@@ -60,7 +60,10 @@ function models() {
   const leader = entries.find(e=>e.value!==null);
   $('model-insight').textContent = leader ? metric==='pass' ? `Bu koşudaki en yüksek otomatik geçiş: ${entries.filter(e=>e.value===leader.value).map(e=>e.label).join(' ve ')} · ${pct(leader.value)}.` : `${metric==='speed'?'En kısa yanıt p95’i':'En düşük bilinen maliyet'}: ${leader.label} · test başarısı ${pct(leader.passRate)}.` : config.insight;
   if(modelRun.hasAccessErrors)$('model-caption').textContent += ' Erişim hataları skorda kalır; eksik süre veya maliyet sıralanmaz.';
-  bars('model-chart', entries, config.format, metric === 'pass');
+  $('model-expand').hidden=entries.length<=5;
+  $('model-expand').textContent=expanded?'daha az göster':`${entries.length} modelin tamamı`;
+  $('model-expand').setAttribute('aria-expanded',String(expanded));
+  bars('model-chart', expanded?entries:entries.slice(0,5), config.format, metric === 'pass');
 }
 const svgNode = (tag, attrs, text) => {
   const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
@@ -152,8 +155,9 @@ fetch('/cenkbot/data.json').then(response=>{if(!response.ok)throw Error();return
   $('gate-model').hidden=!gateRun; $('version-model').hidden=!previous;
   $('release-note').textContent=runs.filter(r=>r.blocked).map(r=>`${r.version} ölçümü erişim sorunu nedeniyle karşılaştırmaya alınmadı.`).join(' ');
   $('status').hidden=true; $('results').hidden=false;
-  bindTabs('model-tabs','metric','model-panel',value=>{metric=value;models();});
+  bindTabs('model-tabs','metric','model-panel',value=>{metric=value;expanded=false;models();});
   bindTabs('gate-tabs','gate','gate-panel',value=>{gateView=value;gate();});
+  $('model-expand').addEventListener('click',()=>{expanded=!expanded;models();});
   $('gate-model').addEventListener('change',gate); $('version-model').addEventListener('change',versions);
   models(); gate(); versions();
 }).catch(()=>{$('status').textContent='Benchmark verisi şu anda yüklenemedi.';});

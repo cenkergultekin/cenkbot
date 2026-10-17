@@ -35,7 +35,7 @@ Agentic akışlar gerçek bir kullanım ihtiyacı olduğunda eklenecek: araç ye
 
 Referans: [GPT-6 Astra tanıtımı](https://openai.com/index/gpt-6-astra/). Cenker'in 18 Ekim düzeltmesiyle sayfa veri inceleme panelinden, hedefi kolay okunan bir benchmark sunumuna dönüştürüldü. Referanstaki koyu zemin, odaklı grafik modülü, kısa sekmeler ve grafik sonrası kısa sonuç düzeni kullanılır. Bu sayfadaki yumuşak çerçeve ve sekme biçimi kullanıcının açık referans talebine dayanır.
 
-Üç bölüm vardır: modeller, yanıt denetimi, sürümler. Modellerde başarı/süre/maliyet sekmeleri tek grafiği değiştirir; denetimde bir model seçimi ile mekanizma veya düzeltme görünümü açılır. Sürümler yalnız son karşılaştırılabilir iki sağlıklı ölçümü gösterir. Uzun tablo, ham yanıt, global deney filtreleri ve çalışma ortamı ayrıntıları ürün sayfasında bulunmaz; yöntem ve tam kayıtlar repodadır.
+Üç bölüm vardır: modeller, yanıt denetimi, sürümler. Modellerde başlangıçta seçili metriğe göre ilk beş sonuç görünür; tek eylemle on modelin tamamı genişletilir. Başarı/süre/maliyet sekmeleri tek grafiği değiştirir; denetimde bir model seçimi ile mekanizma veya düzeltme görünümü açılır. Sürümler yalnız son karşılaştırılabilir iki sağlıklı ölçümü gösterir. Uzun tablo, ham yanıt, global deney filtreleri ve çalışma ortamı ayrıntıları ürün sayfasında bulunmaz; yöntem ve tam kayıtlar repodadır.
 
 `benchmarkView` değişmez `eval/public.json` kaydından yalnız sunum özetini üretir. `/cenkbot/data.json` artık sunum şeması 2'dir; ham deney export'u şema 1 olarak korunur. Yanıt metinleri, istekler ve runtime/config bilgisi tarayıcıya gönderilmez. cenker.dev aynı derlenmiş dönüştürücüyü sync scriptinde kullanır; kaynak proje önce build edilir. Script ve veri URL'leri içerik özetiyle sürümlenir.
 

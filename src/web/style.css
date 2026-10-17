@@ -62,3 +62,5 @@
  .benchmark-page footer{font-size:11px}
 }
 @media(prefers-reduced-motion:no-preference){.result-fill{animation:bar-reveal .3s ease both;transform-origin:left}@keyframes bar-reveal{from{transform:scaleX(0)}to{transform:scaleX(1)}}}
+
+.text-button{font:inherit;font-size:12px;border:0;background:transparent;color:#8bbcf7;min-height:44px;padding:8px 0;cursor:pointer;text-align:left}.text-button:hover{text-decoration:underline;text-underline-offset:4px}
