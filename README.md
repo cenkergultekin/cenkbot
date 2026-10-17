@@ -77,7 +77,8 @@ Speaking preferences are allowlisted. They cannot replace system instructions or
 
 - [Design, prompts, Jev and speaking style](docs/design.md)
 - [Evaluation, correction curves and versioning](docs/evaluation.md)
+- [Initial real experiments and known limitations](docs/first-results.md)
 - [Deployment and cenker.dev integration](docs/operations.md)
 - [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md) · [MIT license](LICENSE)
 
-The next step is a real ten-model baseline, independent human review, then the Jev/repair experiments. Retrieval will later be evaluated independently from answer generation, using this measured foundation.
+Preliminary real results include a ten-model baseline and three-model Jev/repair experiments. The 0.1.3 rerun encountered OpenRouter access/quota failures and cannot establish the correction's live quality gain. Next: a dedicated evaluation key, repeated runs and independent human review. Retrieval will later be evaluated independently from answer generation.

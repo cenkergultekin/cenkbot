@@ -15,6 +15,9 @@ function draw(){
   const selected=run.summary.filter(s=>($('model').value==='all'||s.model===$('model').value)&&($('variant').value==='all'||s.variant===$('variant').value));
   $('provenance').textContent=`${run.version} · ${run.commit.slice(0,7)} · ${run.suiteId}@${run.suiteVersion} · ${run.repeats} tekrar · ${run.concurrency??1} test işi · ${run.runtime}/${run.platform} · ${new Date(run.startedAt).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul'})}`;
   $('recommendation').textContent=run.recommendation?`Ölçümlere göre aday: ${run.recommendation.model}. Canlı ayar otomatik değiştirilmez.`:'Varsayılan model seçimi için henüz yeterli doğrulanmış sonuç yok.';
+  const accessErrors=Object.entries(run.errorSummary??{}).filter(([code])=>/HTTP (401|402|403|429)/.test(code));
+  $('availability').hidden=!accessErrors.length;
+  $('availability').textContent=accessErrors.length?`Erişim/kota hataları: ${accessErrors.map(([code,n])=>`${code} (${n})`).join(', ')}. Bu koşunun skor farkı yalnız kodun kalite etkisi olarak yorumlanamaz.`:'';
   $('summary').replaceChildren();$('quality-bars').replaceChildren();$('repairs').replaceChildren();$('deltas').replaceChildren();
   $('compatibility').textContent=!before?'Karşılaştırılacak bir deney seç.':compatible?'Aynı soru kümesi ve değerlendirici. Pozitif geçme farkı iyileşme demektir.':'Bu deneylerin soru kümesi veya değerlendiricisi farklı; doğrudan skor farkı gösterilmiyor.';
   for(const s of selected){

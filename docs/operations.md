@@ -8,6 +8,8 @@ Public host'a bağlanma en az 24 karakterlik `CENKBOT_SERVICE_TOKEN` ister. Prod
 
 Servis hiçbir sohbeti diske veya veritabanına kaydetmez. Eval CLI ham yanıtları yerel git dışı klasöre yazar. Kullanıcıya gönderilen API yanıtında gizli taslaklar ve Jev sinyalleri bulunmaz.
 
+Eval için production'dan ayrı bir sağlayıcı anahtarı ve istek/token/harcama kotası kullanılmalıdır. Dolar rezervasyonu, paylaşılan hesabın günlük istek sınırını korumaz. İlk 0.1.3 yeniden ölçümünde OpenRouter 403 limit/kota hataları alındı; yeni koşular durduruldu. Aynı anahtarı kullanan uygulamalar da bu sağlayıcı sınırından etkilenebilir; limit kendiliğinden yükseltilmez.
+
 ## cenker.dev
 
 Tanıtım `/cenkbot`, sonuçlar `/cenkbot/benchmark`. Standalone servis bu sayfaları zaten sunar; cenker.dev için hazırlanan ayrı dal aynı statik kaynakları route handler ile sunabilir. `/cenkbot/data.json` yalnız incelenmiş `eval/public.json` dosyasını verir. Böylece benchmark sayfası API çağrısı tüketmez ve chatbot servisi kapalıyken de çalışır.

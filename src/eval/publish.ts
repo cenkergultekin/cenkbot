@@ -10,7 +10,9 @@ export function publicRun(run: Run, reviews: HumanReview[] = []) {
   if (run.status !== "complete") throw new Error("Partial runs cannot be published as a benchmark");
   const summary = summaries(run, reviews);
   const { rows, ...metadata } = run;
-  return { ...metadata, reviewHash: createHash("sha256").update(JSON.stringify(reviews)).digest("hex"), summary, recommendation: recommend(summary),
+  const errors = rows.flatMap(r => r.result.requests).filter(r => r.status === "error");
+  const errorSummary = Object.fromEntries([...Map.groupBy(errors, r => r.error ?? "request failed")].map(([code, requests]) => [code, requests.length]));
+  return { ...metadata, errorSummary, reviewHash: createHash("sha256").update(JSON.stringify(reviews)).digest("hex"), summary, recommendation: recommend(summary),
     cases: rows.map(r => ({ caseId: r.caseId, category: r.category, model: r.model, variant: r.variant, repeat: r.repeat, status: r.result.status, pass: r.finalGrade.pass,
       checks: r.finalGrade.checks, totalMs: r.result.totalMs, costUsd: r.result.costUsd,
       requests: r.result.requests.map(req => ({ purpose: req.purpose, model: req.model, provider: req.provider, status: req.status, ms: req.ms, costUsd: req.costUsd, costSource: req.costSource, error: req.error })),
