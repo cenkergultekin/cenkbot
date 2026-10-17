@@ -1,132 +1,159 @@
-/* Public fixture data only. Text is always inserted with textContent, never innerHTML. */
+/* Curated presentation data; never render model output or raw traces here. */
 const $ = id => document.getElementById(id);
-const node = (tag, text, cls) => { const n = document.createElement(tag); if(text !== undefined)n.textContent=text; if(cls)n.className=cls; return n; };
-const pct = n => n === null || n === undefined ? 'ölçülmedi' : (n * 100).toFixed(1) + '%';
-const money = n => n === null || n === undefined ? 'bilinmiyor' : '$' + n.toFixed(6);
-const ms = n => n === null || n === undefined ? 'ölçülmedi' : Math.round(n) + ' ms';
-let runs = [];
-let capability = 'all';
-const labels = {baseline:'tek model',query:'Jev yönlendirme',guarded:'yanıt denetimi',repair:'tek düzeltme',repair2:'iki düzeltme deneyi'};
-const option = (value,text) => {const o=node('option',text);o.value=value;return o;};
-function draw(){
-  const run=runs.find(r=>r.id===$('run').value);if(!run)return;
-  const before=runs.find(r=>r.id===$('previous').value);
-  const compatible=before && before.suiteHash===run.suiteHash && before.evaluatorHash===run.evaluatorHash && before.kind===run.kind;
-  const timingComparable=compatible&&(before.concurrency??1)===(run.concurrency??1)&&before.runtime===run.runtime&&before.platform===run.platform;
-  const selected=run.summary.filter(s=>($('model').value==='all'||s.model===$('model').value)&&($('variant').value==='all'||s.variant===$('variant').value));
-  $('provenance').textContent=`${run.version} · ${run.commit.slice(0,7)} · ${run.suiteId}@${run.suiteVersion} · ${run.repeats} tekrar · ${run.concurrency??1} test işi · ${run.runtime}/${run.platform} · ${new Date(run.startedAt).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul'})}`;
-  $('recommendation').textContent=run.recommendation?`Ölçümlere göre aday: ${run.recommendation.model}. Canlı ayar otomatik değiştirilmez.`:'Varsayılan model seçimi için henüz yeterli doğrulanmış sonuç yok.';
-  const accessErrors=Object.entries(run.errorSummary??{}).filter(([code])=>/HTTP (401|402|403|429)/.test(code));
-  $('availability').hidden=!accessErrors.length;
-  $('availability').textContent=accessErrors.length?`Erişim/kota hataları: ${accessErrors.map(([code,n])=>`${code} (${n})`).join(', ')}. Bu koşunun skor farkı yalnız kodun kalite etkisi olarak yorumlanamaz.`:'';
-  $('summary').replaceChildren();$('quality-bars').replaceChildren();$('repairs').replaceChildren();$('deltas').replaceChildren();
-  $('compatibility').textContent=!before?'Karşılaştırılacak bir deney seç.':compatible?'Aynı soru kümesi ve değerlendirici. Farklar otomatik kontrollere aittir; neden-sonuç veya istatistiksel üstünlük göstermez.':'Bu deneylerin soru kümesi veya değerlendiricisi farklı; doğrudan skor farkı gösterilmiyor.';
-  drawVisuals(run, before, selected);
-  for(const s of selected){
-    const tr=node('tr');[`${s.model} / ${labels[s.variant]??s.variant}`,`${pct(s.passRate)} · n=${s.n}`,pct(s.successRate),ms(s.p50Ms),ms(s.p95Ms),money(s.costPerPassUsd),`${s.human.mean===null?'bekliyor':pct(s.human.mean)} · ${s.human.reviewed}/${s.n}`].forEach(v=>tr.append(node('td',v)));$('summary').append(tr);
-    if(compatible && !accessLimited(run) && !accessLimited(before)){const p=before.summary.find(p=>p.model===s.model&&p.variant===s.variant);if(p){const diff=(s.passRate-p.passRate)*100;const currentTime=answerP95(run,s),priorTime=answerP95(before,p);const timing=timingComparable&&currentTime!==null&&priorTime!==null?`yanıt p95 farkı ${Math.round(currentTime-priorTime)} ms`:'karşılaştırılabilir yanıt süresi yok';const pair=node('article',undefined,'version-pair');pair.append(node('h3',`${short(s.model)} · ${labels[s.variant]??s.variant}`),barRow(before.version,p.passRate,p.n,'initial'),barRow(run.version,s.passRate,s.n),node('p',`${diff>=0?'+':''}${diff.toFixed(1)} puan; ${timing}.`,'chart-caption'));$('deltas').append(pair);}}
-  }
-  if(compatible && (accessLimited(run)||accessLimited(before))){$('compatibility').textContent='Erişim/kota hatalı koşu içeriyor. Kodun kalite etkisiyle karışmaması için sürüm farkı hesaplanmıyor.';}
-  if(compatible && !$('deltas').children.length && !accessLimited(run) && !accessLimited(before))$('deltas').append(node('p','Seçimde eşleşen model / mekanizma yok.','muted'));
-  $('cases').replaceChildren();
-  const cases=run.cases.filter(c=>($('model').value==='all'||c.model===$('model').value)&&($('variant').value==='all'||c.variant===$('variant').value));
-  let count=0;
-  for(const c of cases){
-    const prior=compatible?before.cases.find(p=>p.caseId===c.caseId&&p.model===c.model&&p.variant===c.variant&&p.repeat===c.repeat):null;
-    if($('case-filter').value==='failed'&&c.pass)continue;
-    if($('case-filter').value==='changed'&&(!prior||prior.pass===c.pass))continue;
-    const d=node('details');d.append(node('summary',`${c.pass?'geçti':'başarısız'} · ${c.caseId} · ${c.model} · ${labels[c.variant]??c.variant}`));
-    d.append(node('p',`${ms(c.totalMs)} · ${money(c.costUsd)} · ${c.category} · tekrar ${c.repeat+1}`,'case-meta'));
-    const errors=(c.requests??[]).filter(r=>r.status==='error');if(errors.length)d.append(node('p',errors.map(r=>`${r.purpose}: ${r.error??'istek başarısız'}`).join(' · '),'case-meta'));
-    for(const a of c.attempts)d.append(node('p',`${a.index===0?'ilk taslak':`düzeltme ${a.index}`} · ${a.pass?'geçti':'başarısız'} · ${a.verdict}${a.acceptedStyleOnly?' · yalnız stil kusuru kabul edildi':''}\n${a.text}`,'answer'));
-    d.append(node('p',`gönderilen yanıt\n${c.finalText}`,'answer'));
-    if(prior)d.append(node('p',`önceki sürüm\n${prior.finalText}`,'answer'));
-    $('cases').append(d);if(++count>=100)break;
-  }
-  if(!count)$('cases').append(node('p','Bu filtrede örnek yok.','muted'));
-  if(count>=100)$('cases').append(node('p','İlk 100 örnek gösteriliyor; tamamı sonuç verisinde.','muted'));
-}
-const releaseText = {'0.1.1':'on modelin başlangıç ölçümü','0.1.2':'Jev ve düzeltme karşılaştırması','0.1.3':'kısalık politikasının yeniden testi'};
-const groups = {all:null, knowledge:['facts','typos','unknown','false-premise','reasoning'],context:['context','compose'],boundaries:['privacy','commitment','injection','scope'],language:['language','style','social']};
-const captions = {all:'Bütün soru kategorileri. Model sıralaması yalnız seçili mekanizma ve bu koşu için geçerlidir.',knowledge:'Olgular, yazım hataları, bilinmeyen bilgi, yanlış öncül ve akıl yürütme. İçeriğe yönelik sabit kontroller.',context:'Önceki konuşmayı izleme ve bilgileri birleştirme. Sabit senaryoların otomatik kontrolleri.',boundaries:'Gizlilik, taahhüt, talimat saldırısı ve kapsam. Birkaç örnekte başarı güvenlik garantisi değildir.',language:'Dil, uzunluk ve sosyal konuşmaya yönelik kontroller. Akıcılık veya üslup tercihi insan tarafından puanlanmadı.'};
+const node = (tag, text, cls) => {
+  const el = document.createElement(tag);
+  if (text !== undefined) el.textContent = text;
+  if (cls) el.className = cls;
+  return el;
+};
+const pct = value => (value * 100).toFixed(1) + '%';
 const short = model => model.split('/').pop();
-const accessLimited = run => Object.keys(run.errorSummary??{}).some(code=>/HTTP (401|402|403)/.test(code));
-const rowsFor = (run,s) => run.cases.filter(c=>c.model===s.model&&c.variant===s.variant);
-function answerP95(run,s){const times=rowsFor(run,s).filter(c=>c.status==='ok'&&c.attempts.length>0).map(c=>c.totalMs).sort((a,b)=>a-b);return times.length?times[Math.ceil(times.length*.95)-1]:null;}
-function barRow(label,value,n,kind=''){const row=node('div',undefined,'bar-row '+kind),head=node('div',undefined,'bar-label');head.append(node('span',label),node('span',`${pct(value)} · n=${n}`));const track=node('div',undefined,'bar-track'),fill=node('div',undefined,'bar-fill');fill.style.width=Math.max(0,Math.min(100,value*100))+'%';track.append(fill);row.append(head,track);return row;}
-const svgNode = (tag,attrs,text) => {const el=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const [key,value] of Object.entries(attrs??{}))el.setAttribute(key,String(value));if(text!==undefined)el.textContent=text;return el;};
-function scatter(target,points,xLabel,format){
-  const root=$(target);root.replaceChildren();
-  if(!points.length){root.append(node('p','Karşılaştırılabilir ölçüm yok.','empty-chart'));return;}
-  const svg=svgNode('svg',{viewBox:'0 0 480 350',role:'img','aria-label':`${xLabel} ve otomatik test başarısı. Noktaların değerleri aşağıdaki listede.`});
-  const max=Math.max(...points.map(p=>p.x))*1.15||1, x=v=>52+v/max*382,y=v=>280-v*224;
-  for(const rate of [0,.25,.5,.75,1]){svg.append(svgNode('line',{x1:52,x2:434,y1:y(rate),y2:y(rate),class:'plot-grid'}),svgNode('text',{x:42,y:y(rate)+4,'text-anchor':'end'},Math.round(rate*100)+'%'));}
-  for(const ratio of [0,.5,1])svg.append(svgNode('text',{x:x(max*ratio),y:304,'text-anchor':'middle'},format(max*ratio)));
-  svg.append(svgNode('text',{x:52,y:28},'otomatik test başarısı'),svgNode('text',{x:243,y:335,'text-anchor':'middle'},xLabel));
-  points.forEach((p,i)=>{const circle=svgNode('circle',{cx:x(p.x),cy:y(p.y),r:6,class:`point series-${i%10}`});circle.append(svgNode('title',{},`${p.label}: ${pct(p.y)}, ${format(p.x)}${p.n!==undefined?`, n=${p.n}`:''}`));svg.append(circle);});
-  root.append(svg);const list=node('ul',undefined,'plot-key');points.forEach((p,i)=>{const item=node('li'),dot=node('span',undefined,`key-dot series-${i%10}`);dot.setAttribute('aria-hidden','true');item.append(dot,node('span',p.label),node('span',`${format(p.x)} · ${pct(p.y)}${p.n!==undefined?` · n=${p.n}`:''}`));list.append(item);});root.append(list);
-}
-function correctionCurve(rows,s){
-  const svg=svgNode('svg',{viewBox:'0 0 420 190',role:'img','aria-label':'Sabit ilk taslak örnekleminde taslak başarısı. Düzeltmeye girmeyen turlarda son taslak korunur. Gönderim başarısı üstteki çubuklarda.'});
-  const last=Math.max(...rows.map(c=>c.attempts.length-1)),x=i=>44+i/Math.max(1,last)*330,y=rate=>146-rate*114;
-  for(const rate of [0,.5,1])svg.append(svgNode('line',{x1:44,x2:374,y1:y(rate),y2:y(rate),class:'plot-grid'}),svgNode('text',{x:35,y:y(rate)+4,'text-anchor':'end'},Math.round(rate*100)+'%'));
-  const rates=Array.from({length:last+1},(_,i)=>rows.filter(c=>c.attempts[Math.min(i,c.attempts.length-1)].pass).length/rows.length);
-  svg.setAttribute('aria-label',`Sabit n=${rows.length} taslak eğrisi: ${rates.map((rate,i)=>(i===0?'ilk taslak':`düzeltme ${i}`)+' '+pct(rate)).join(', ')}. Gönderim başarısı üstteki çubuklarda.`);
-  svg.append(svgNode('polyline',{points:rates.map((rate,i)=>`${x(i)},${y(rate)}`).join(' '),fill:'none',stroke:'var(--accent)','stroke-width':2}));
-  rates.forEach((rate,i)=>{svg.append(svgNode('circle',{cx:x(i),cy:y(rate),r:4,fill:'var(--accent)'}),svgNode('text',{x:x(i),y:y(rate)-10,'text-anchor':'middle'},pct(rate)),svgNode('text',{x:x(i),y:171,'text-anchor':'middle'},i===0?'ilk taslak':`düzeltme ${i}`));});
-  const figure=node('figure',undefined,'correction-curve');figure.append(svg,node('figcaption',`Taslak eğrisi · sabit n=${rows.length}. Düzeltmeye girmeyen turda son taslak korunur; gönderim başarısı ayrı gösterilir.`));return figure;
-}
-function drawVisuals(run,before,selected){
-  for(const b of $('releases').children)b.setAttribute('aria-pressed',String(b.dataset.run===run.id));
-  const humanCount=selected.reduce((sum,s)=>sum+s.human.reviewed,0);
-  $('scope').textContent=`${run.version} · ${new Set(selected.map(s=>s.model)).size} model · ${selected.reduce((sum,s)=>sum+s.n,0)} tur · ${humanCount?humanCount+' tur insan incelemeli':'insan incelemesi yok'}`;
-  $('human-note').textContent=humanCount?'İnsan incelemesi kapsamı ayrıntılı tabloda ayrıca gösterilir.':'İnsan incelemesi henüz yapılmadı.';
-  $('dataset-note').textContent=`${run.suiteId}@${run.suiteVersion} · ${new Set(run.cases.map(c=>c.caseId)).size} sabit sentetik soru · ${run.repeats} tekrar · ${run.models.length} model · ${run.variants.length} mekanizma. On modellik ilk koşu yalnız tek model mekanizmasını; sonraki koşular üç modeli kapsar. Bu küçük, açık soru kümesi genel yetenek sıralaması değildir.`;
-  $('capability-caption').textContent=captions[capability];
-  const measured=selected.map(s=>{const rows=rowsFor(run,s).filter(c=>!groups[capability]||groups[capability].includes(c.category));return {s,n:rows.length,rate:rows.length?rows.filter(c=>c.pass).length/rows.length:null};}).sort((a,b)=>(b.rate??-1)-(a.rate??-1));
-  for(const {s,n,rate} of measured)if(n)$('quality-bars').append(barRow(`${short(s.model)} · ${labels[s.variant]??s.variant}`,rate,n));
-  if(!measured.some(m=>m.n))$('quality-bars').append(node('p','Bu test alanında örnek yok.','muted'));
-  $('mechanisms').replaceChildren();
-  for(const model of [...new Set(selected.map(s=>s.model))]){
-    const conditions=run.summary.filter(s=>s.model===model);if(conditions.length<2)continue;
-    const block=node('article');block.append(node('h3',short(model)));
-    for(const s of conditions)block.append(barRow(labels[s.variant]??s.variant,s.passRate,s.n,s.variant==='baseline'?'initial':''));
-    $('mechanisms').append(block);
+const names = { baseline: 'tek model', query: 'Jev yönlendirme', guarded: 'yanıt denetimi', repair: 'tek düzeltme', repair2: 'iki düzeltme' };
+const option = (value, text) => { const el = node('option', text); el.value = value; return el; };
+let runs = [], modelRun, gateRun, current, previous;
+let metric = 'pass', gateView = 'pass';
+
+function bars(target, entries, format, percent = false) {
+  const root = $(target);
+  root.replaceChildren();
+  const known = entries.filter(e => e.value !== null && Number.isFinite(e.value));
+  const max = percent ? 1 : Math.max(...known.map(e => e.value), 0) * 1.08 || 1;
+  const axis = node('div', undefined, 'bar-axis');
+  axis.append(node('span', '0'), node('span', format(max)));
+  root.append(axis);
+  for (const entry of entries) {
+    const row = node('div', undefined, 'result-row' + (entry.highlight ? ' highlighted' : ''));
+    const label = node('div', undefined, 'result-label');
+    label.append(node('span', entry.label), node('strong', entry.value === null ? entry.missing ?? 'ölçülemedi' : format(entry.value)));
+    const track = node('div', undefined, 'result-track');
+    if (entry.value !== null) {
+      const fill = node('div', undefined, 'result-fill');
+      fill.style.width = Math.max(0, Math.min(100, entry.value / max * 100)) + '%';
+      track.append(fill);
+    }
+    row.append(label, track);
+    root.append(row);
   }
-  if(!$('mechanisms').children.length)$('mechanisms').append(node('p','Bu koşuda yalnız tek model mekanizması test edildi. Jev karşılaştırması için 0.1.2 koşusunu seç.','muted'));
-  const limited=accessLimited(run);
-  const plotSelected=$('variant').value==='all'?selected.filter(s=>s.variant==='baseline'):selected;
-  const speed=limited?[]:plotSelected.flatMap(s=>{const x=answerP95(run,s);return x===null?[]:[{label:short(s.model),x:x/1000,y:s.passRate,n:rowsFor(run,s).filter(c=>c.status==='ok'&&c.attempts.length>0).length}];});
-  const cost=limited?[]:plotSelected.filter(s=>s.costPerPassUsd!==null&&s.costPerPassUsd!==undefined).map(s=>({label:short(s.model),x:s.costPerPassUsd,y:s.passRate}));
-  scatter('speed-chart',speed,'yanıt p95 · saniye',v=>v.toFixed(1)+' s');scatter('cost-chart',cost,'geçen yanıt başına USD',v=>'$'+v.toFixed(5));
-  $('plot-note').textContent=limited?'Bu koşu erişim/kota hatası içeriyor. Hız ve maliyet sıralaması gösterilmiyor; test başarısındaki düşüş kodun kalite etkisi olarak yorumlanamaz.':`${$('variant').value==='all'?'Bu iki grafikte mekanizmaları karıştırmamak için yalnız tek model koşulu kullanılıyor. ':''}${plotSelected.length-speed.length} sonuçta kullanılabilir yanıt süresi, ${plotSelected.length-cost.length} sonuçta tam maliyet yok. Başarı ekseni tüm turların otomatik test sonucudur.`;
-  const repairSelection=run.summary.filter(s=>s.curve.length>1&&($('model').value==='all'||s.model===$('model').value)&&(!['repair','repair2'].includes($('variant').value)||s.variant===$('variant').value));
-  for(const s of repairSelection){
-    const rows=rowsFor(run,s).filter(c=>c.attempts.length>0);if(!rows.length)continue;
-    const block=node('article',undefined,'repair-block');block.append(node('h3',`${short(s.model)} · ${labels[s.variant]??s.variant}`));
-    block.append(barRow('ilk taslak',rows.filter(c=>c.attempts[0].pass).length/rows.length,rows.length,'initial'),barRow('gönderilen sonuç',rows.filter(c=>c.pass).length/rows.length,rows.length));
-    block.append(correctionCurve(rows,s));
-    block.append(node('p',`Düzeltilen turlarda: kurtarılan ${pct(s.recoveryRate)} · bozulan ${pct(s.regressionRate)} · gereksiz düzeltme ${pct(s.unnecessaryRepairRate)}`,'chart-caption'));
-    const detail=node('details');detail.append(node('summary','aşama örneklemleri ve maliyet'));
-    for(const step of s.curve)detail.append(node('p',`${step.attempt===0?'ilk taslak':`düzeltme ${step.attempt}`}: ${pct(step.passRate)} · n=${step.n} · ${ms(step.p50AttemptMs)} · ${money(step.incrementalCostUsd)}`,'case-meta'));
-    const repaired=rows.filter(c=>c.attempts.length>1),firstBad=repaired.filter(c=>!c.attempts[0].pass).length;detail.append(node('p',`Oran paydaları: kurtarma ${firstBad} ilk hatalı taslak; bozma ${repaired.length-firstBad} ilk geçen taslak; gereksiz düzeltme ${repaired.length} düzeltilen tur.`,'case-meta'));
-    block.append(detail);$('repairs').append(block);
-  }
-  if(!$('repairs').children.length)$('repairs').append(node('p','Düzeltme etkisini görmek için tek düzeltme veya iki düzeltme deneyini seç.','muted'));
 }
-fetch('/cenkbot/data.json').then(r=>{if(!r.ok)throw Error();return r.json();}).then(data=>{
-  if(data.schemaVersion!==1||!Array.isArray(data.runs))throw Error();runs=data.runs;
-  if(!runs.length){$('status').textContent='Henüz yayımlanmış gerçek model ölçümü yok. On model adayı seçildi; skorlar eval tamamlandıktan sonra görünecek.';return;}
-  $('status').textContent='';$('results').hidden=false;
-  $('previous').append(option('none','karşılaştırma yok'));
-  for(const r of runs){const label=`${r.version} · ${new Date(r.startedAt).toLocaleDateString('tr-TR',{timeZone:'Europe/Istanbul'})} · ${r.id.slice(-8)}`;$('run').append(option(r.id,label));$('previous').append(option(r.id,label));}
-  const usable=runs.find(r=>!accessLimited(r));
-  if(usable)$('run').value=usable.id;
-  $('selection-note').textContent=usable&&usable.id!==runs[0].id?`Başlangıçta erişim/kota sorunu olmayan son koşu (${usable.version}) gösteriliyor. En yeni ${runs[0].version} koşusu da yukarıdan incelenebilir.`:'Her sürüm kendi deney koşullarıyla saklanır.';
-  const fillFilters=()=>{const r=runs.find(r=>r.id===$('run').value);$('model').replaceChildren(option('all','tümü'));$('variant').replaceChildren(option('all','tümü'));for(const m of r.models)$('model').append(option(m.id,m.id));for(const v of r.variants)$('variant').append(option(v,labels[v]??v));if(r.variants.includes('baseline'))$('variant').value='baseline';draw();};
-  for(const r of runs){const b=node('button',undefined,'release');b.type='button';b.dataset.run=r.id;b.append(node('strong',r.version),node('span',releaseText[r.version]??'kayıtlı deney'),node('small',`${r.models.length} model · ${r.cases.length} tur${accessLimited(r)?' · erişim/kota etkisi':''}`));b.addEventListener('click',()=>{$('run').value=r.id;fillFilters();});$('releases').append(b);}
-  const tabs=[...$('capabilities').querySelectorAll('[role=tab]')];
-  const activate=tab=>{capability=tab.dataset.capability;for(const t of tabs){t.setAttribute('aria-selected',String(t===tab));t.tabIndex=t===tab?0:-1;}$('capability-panel').setAttribute('aria-labelledby',tab.id);draw();};
-  tabs.forEach((tab,i)=>{tab.addEventListener('click',()=>activate(tab));tab.addEventListener('keydown',e=>{let next;if(e.key==='ArrowRight')next=(i+1)%tabs.length;if(e.key==='ArrowLeft')next=(i+tabs.length-1)%tabs.length;if(e.key==='Home')next=0;if(e.key==='End')next=tabs.length-1;if(next!==undefined){e.preventDefault();tabs[next].focus();activate(tabs[next]);}});});
-  $('run').addEventListener('change',fillFilters);for(const id of ['previous','model','variant','case-filter'])$(id).addEventListener('change',draw);fillFilters();
+function models() {
+  if (!modelRun) { $('model-chart').replaceChildren(node('p', 'Henüz model karşılaştırması yok.', 'empty')); return; }
+  const summaries = modelRun.summary.filter(s => s.variant === 'baseline');
+  const settings = {
+    pass: { title: 'otomatik test başarısı', value: s => s.passRate, format: pct,
+      caption: 'Gerekli bilgiyi, kapsamı ve yanıt kurallarını geçen soruların oranı. Başarısız istekler dahil.',
+      insight: 'Bu test, genel dil kalitesini veya kullanıcı tercihini ölçmez.' },
+    speed: { title: 'yanıt süresi', value: s => s.latencyMs === null ? null : s.latencyMs / 1000, format: v => v.toFixed(1) + ' sn',
+      caption: 'Yanıt üretilen turların p95 uçtan uca süresi. Hazır selamlar ve başarısız istekler hariç.',
+      insight: 'Daha kısa süre, daha yüksek test başarısı anlamına gelmez.' },
+    cost: { title: 'maliyet', value: s => s.costPerPassUsd === null ? null : s.costPerPassUsd * 1000, format: v => '$' + v.toFixed(2),
+      caption: 'Testi geçen 1.000 yanıt başına maliyet. Başarısız denemeler dahil; fiyat tahminleri içerebilir.',
+      insight: 'Tam maliyeti bilinmeyen sonuçlar fiyat sıralamasına girmez.' },
+  };
+  const config = settings[metric];
+  const entries = summaries.map(s => ({ model:s.model, passRate:s.passRate, label: short(s.model), value: config.value(s), missing: metric === 'cost' ? 'bilinmiyor' : 'yanıt alınamadı' }));
+  entries.sort((a,b) => a.value === null ? (b.value === null ? 0 : 1) : b.value === null ? -1 : metric === 'pass' ? b.value - a.value : a.value - b.value);
+  // Visual emphasis identifies the leading recorded value, not an accepted production winner.
+  if (entries[0]?.value !== null && entries[0]) entries[0].highlight = true;
+  $('model-title').textContent = config.title;
+  $('model-scope').textContent = `${modelRun.version} · ${summaries.length} model · ${modelRun.questions} soru`;
+  $('model-caption').textContent = config.caption;
+  const leader = entries.find(e=>e.value!==null);
+  $('model-insight').textContent = leader ? metric==='pass' ? `Bu koşudaki en yüksek otomatik geçiş: ${entries.filter(e=>e.value===leader.value).map(e=>e.label).join(' ve ')} · ${pct(leader.value)}.` : `${metric==='speed'?'En kısa yanıt p95’i':'En düşük bilinen maliyet'}: ${leader.label} · test başarısı ${pct(leader.passRate)}.` : config.insight;
+  if(modelRun.hasAccessErrors)$('model-caption').textContent += ' Erişim hataları skorda kalır; eksik süre veya maliyet sıralanmaz.';
+  bars('model-chart', entries, config.format, metric === 'pass');
+}
+const svgNode = (tag, attrs, text) => {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const [key,value] of Object.entries(attrs)) el.setAttribute(key, String(value));
+  if (text !== undefined) el.textContent = text;
+  return el;
+};
+function correction(summary) {
+  const { stages, n, sentRate } = summary.correction;
+  const root = $('gate-chart'); root.replaceChildren();
+  if (stages.length < 2) { root.append(node('p', 'Bu modelde düzeltme eğrisi için ölçüm yok.', 'empty')); return; }
+  const svg = svgNode('svg', { viewBox: '0 0 680 290', role: 'img', 'aria-label': `Sabit ${n} turda taslak başarısı: ${stages.map(pct).join(', ')}. Gönderilen sonuç: ${pct(sentRate)}.` });
+  const x = i => 65 + i / (stages.length - 1) * 550, y = rate => 220 - rate * 170;
+  for (const rate of [0,.5,1]) {
+    svg.append(svgNode('line', {x1:65,x2:615,y1:y(rate),y2:y(rate),class:'curve-grid'}), svgNode('text', {x:48,y:y(rate)+4,'text-anchor':'end'},pct(rate)));
+  }
+  svg.append(svgNode('polyline', {points:stages.map((rate,i)=>`${x(i)},${y(rate)}`).join(' '),class:'curve-line'}));
+  stages.forEach((rate,i)=>svg.append(svgNode('circle',{cx:x(i),cy:y(rate),r:5,class:'curve-point'}),svgNode('text',{x:x(i),y:y(rate)-15,'text-anchor':'middle'},pct(rate)),svgNode('text',{x:x(i),y:252,'text-anchor':'middle'},i===0?'ilk taslak':i===1?'tek düzeltme':'iki düzeltme')));
+  root.append(svg);
+}
+function gate() {
+  if (!gateRun) { $('gate-chart').replaceChildren(node('p', 'Henüz denetim karşılaştırması yok.', 'empty')); return; }
+  const summaries = gateRun.summary.filter(s => s.model === $('gate-model').value);
+  if (gateView === 'pass') {
+    $('gate-title').textContent = 'otomatik test başarısı';
+    bars('gate-chart', summaries.map(s=>({label:names[s.variant]??s.variant,value:s.passRate,highlight:s.variant==='repair'})),pct,true);
+    $('gate-caption').textContent = `Aynı ${gateRun.questions} soru, farklı denetim mekanizmaları. ${gateRun.version} ölçümü.`;
+    const baseline = summaries.find(s=>s.variant==='baseline');
+    const repairs = summaries.filter(s=>['repair','repair2'].includes(s.variant));
+    $('gate-insight').textContent = baseline ? repairs.map(s=>{const diff=(s.passRate-baseline.passRate)*100;return `${names[s.variant]}: ${diff>=0?'+':''}${diff.toFixed(1)} puan`;}).join(' · ') + '. Tek model koşuluna göre.' : 'Karşılaştırma aynı modelin kayıtlı denetim koşullarına aittir.';
+  } else {
+    const summary = summaries.find(s=>s.variant==='repair2') ?? summaries.find(s=>s.variant==='repair');
+    $('gate-title').textContent = 'taslak başarısı';
+    if (summary) {
+      correction(summary);
+      $('gate-caption').textContent = `Aynı ${summary.correction.n} turun taslakları. Düzeltmeye girmeyen turda son taslak korunur.`;
+      $('gate-insight').textContent = summary.correction.sentRate === null ? 'Gönderim başarısı ölçülmedi.' : `Kullanıcıya gönderilen sonuçların test başarısı: ${pct(summary.correction.sentRate)}. Taslak başarısı ile gönderim başarısı ayrıdır.`;
+    } else {
+      $('gate-chart').replaceChildren(node('p','Bu modelde düzeltme ölçümü yok.','empty'));
+      $('gate-caption').textContent = ''; $('gate-insight').textContent = '';
+    }
+  }
+}
+function versions() {
+  const model = $('version-model').value;
+  const a = current?.summary.find(s=>s.model===model&&s.variant==='baseline');
+  const b = previous?.summary.find(s=>s.model===model&&s.variant==='baseline');
+  if (!a || !b) {
+    $('version-chart').replaceChildren(node('p', 'Karşılaştırılabilir iki sürüm henüz yok.', 'empty'));
+    $('version-caption').textContent = 'Aynı soru kümesi ve değerlendiriciyle ölçülen sürümler gerekir.';
+    $('version-insight').textContent = ''; return;
+  }
+  bars('version-chart', [{label:previous.version,value:b.passRate},{label:current.version,value:a.passRate,highlight:true}],pct,true);
+  const diff = (a.passRate-b.passRate)*100;
+  $('version-caption').textContent = `aynı ${current.questions} soru · tek model koşulu · aynı değerlendirici`;
+  $('version-insight').textContent = `${diff>=0?'+':''}${diff.toFixed(1)} puan. Otomatik test sonucu · ${current.repeats} tekrar.`;
+}
+function bindTabs(id, attr, panel, change) {
+  const tabs = [...$(id).querySelectorAll('[role=tab]')];
+  const activate = tab => {
+    for (const t of tabs) {t.setAttribute('aria-selected', String(t===tab)); t.tabIndex=t===tab?0:-1;}
+    $(panel).setAttribute('aria-labelledby',tab.id); change(tab.dataset[attr]);
+  };
+  tabs.forEach((tab,i)=>{
+    tab.addEventListener('click',()=>activate(tab));
+    tab.addEventListener('keydown',event=>{
+      let next;
+      if(event.key==='ArrowRight')next=(i+1)%tabs.length;
+      if(event.key==='ArrowLeft')next=(i+tabs.length-1)%tabs.length;
+      if(event.key==='Home')next=0;
+      if(event.key==='End')next=tabs.length-1;
+      if(next!==undefined){event.preventDefault();tabs[next].focus();activate(tabs[next]);}
+    });
+  });
+}
+fetch('/cenkbot/data.json').then(response=>{if(!response.ok)throw Error();return response.json();}).then(data=>{
+  if(data.schemaVersion!==2||!Array.isArray(data.runs))throw Error();
+  runs=data.runs;
+  if(data.humanReviewed)$('review-note').textContent='otomatik testler · insan incelemeleri repoda';
+  if(!runs.length){$('status').textContent='Henüz yayımlanmış gerçek model ölçümü yok.';return;}
+  const usable = runs.filter(r=>!r.blocked);
+  // Model comparisons use the broadest same-run baseline; mechanisms use the latest healthy run.
+  modelRun = [...usable].sort((a,b)=>b.summary.filter(s=>s.variant==='baseline').length-a.summary.filter(s=>s.variant==='baseline').length)[0];
+  gateRun = usable.find(r=>r.summary.some(s=>s.variant!=='baseline'));
+  current = usable.find(r=>r.summary.some(s=>s.variant==='baseline'));
+  previous = current && usable.find(r=>r.id!==current.id&&r.startedAt<current.startedAt&&r.comparisonKey===current.comparisonKey&&r.summary.some(s=>s.variant==='baseline'&&current.summary.some(c=>c.variant==='baseline'&&c.model===s.model)));
+  if(gateRun)for(const model of new Set(gateRun.summary.map(s=>s.model)))$('gate-model').append(option(model,short(model)));
+  if(current&&previous)for(const s of current.summary.filter(s=>s.variant==='baseline'&&previous.summary.some(p=>p.variant==='baseline'&&p.model===s.model)))$('version-model').append(option(s.model,short(s.model)));
+  $('gate-model').hidden=!gateRun; $('version-model').hidden=!previous;
+  $('release-note').textContent=runs.filter(r=>r.blocked).map(r=>`${r.version} ölçümü erişim sorunu nedeniyle karşılaştırmaya alınmadı.`).join(' ');
+  $('status').hidden=true; $('results').hidden=false;
+  bindTabs('model-tabs','metric','model-panel',value=>{metric=value;models();});
+  bindTabs('gate-tabs','gate','gate-panel',value=>{gateView=value;gate();});
+  $('gate-model').addEventListener('change',gate); $('version-model').addEventListener('change',versions);
+  models(); gate(); versions();
 }).catch(()=>{$('status').textContent='Benchmark verisi şu anda yüklenemedi.';});

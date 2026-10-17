@@ -1,5 +1,12 @@
 # Changelog
 
+## Benchmark presentation 2 · 2026-10-18
+
+- Replace the analysis dashboard with three focused sections: models, response review, releases. Follow the supplied Astra reference with a dark palette, compact tabs and one chart per section.
+- Remove raw traces, large tables and run/config controls from the product page. Keep the full experiment export in the repository.
+- Serve aggregate-only presentation schema 2; preserve immutable schema-1 experiment records and chatbot behavior version 0.1.3.
+- Share the projection between the service and site snapshot; test withheld-answer latency and fixed-cohort correction/delivery separation. No paid eval was run.
+
 ## Benchmark presentation · 2026-10-17
 
 - Capability tabs, per-model mechanism comparisons, quality/latency and quality/cost plots, and an interactive release history replace the initial table-first layout.

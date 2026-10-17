@@ -12,6 +12,7 @@ import { compare } from "../eval/compare.js";
 import { Budget } from "../eval/budget.js";
 import { authorized } from "../server.js";
 import { jevCost } from "../jev.js";
+import { benchmarkView } from "../benchmark-view.js";
 import type { Run, Row, Case } from "../eval/schema.js";
 
 const { config, profile, models } = await loadSettings();
@@ -155,4 +156,48 @@ test("repair recovery and regression are paired to the first draft", async () =>
   let s = summaries(run)[0]!; assert.equal(s.recoveryRate, 1); assert.equal(s.regressionRate, null); assert.equal(s.curve.length, 2);
   r.attemptGrades = [grade(sample, "Ankara."), grade(sample, "İstanbul.")]; r.finalGrade.pass = false;
   s = summaries(run)[0]!; assert.equal(s.regressionRate, 1); assert.equal(s.unnecessaryRepairRate, 1);
+});
+
+test("benchmark presentation omits raw text and keeps failures out of response latency", async () => {
+  const run = await runFixture();
+  const failure = structuredClone(run.rows[0]!);
+  failure.id = "r:2";
+  failure.result.status = "unavailable";
+  failure.result.totalMs = 1;
+  failure.result.text = "PRIVATE_SENTINEL";
+  failure.result.unknownCostRequests = 1;
+  failure.finalGrade.pass = false;
+  failure.result.requests.push({ ...rec("draft"), status: "error", error: "OpenRouter HTTP 403" });
+  run.rows.push(failure);
+  const published = publicRun(run);
+  const original = JSON.stringify(published);
+  const view = benchmarkView({ schemaVersion: 1, runs: [published] });
+  const summary = view.runs[0]!.summary[0]!;
+  assert.equal(summary.passRate, .5);
+  assert.equal(summary.answerN, 1);
+  assert.equal(summary.latencyMs, run.rows[0]!.result.totalMs);
+  assert.equal(summary.costPerPassUsd, null);
+  assert.equal(view.runs[0]!.blocked, true);
+  assert.equal("cases" in view.runs[0]!, false);
+  assert.equal(JSON.stringify(view).includes("PRIVATE_SENTINEL"), false);
+  assert.equal(JSON.stringify(published), original);
+});
+
+test("presentation correction curve keeps the first-draft cohort and separates delivery", async () => {
+  const run = await runFixture();
+  const repaired = structuredClone(run.rows[0]!);
+  repaired.id = "r:2";
+  repaired.result.attempts.push({ index: 1, text: "Ankara.", verdict: "send", reasons: [], ms: 5 });
+  repaired.attemptGrades = [grade(sample, "İstanbul."), grade(sample, "Ankara.")];
+  const withheld = structuredClone(repaired);
+  withheld.id = "r:3";
+  withheld.result.attempts.push({ index: 2, text: "Ankara.", verdict: "send", reasons: [], ms: 5 });
+  withheld.attemptGrades = [grade(sample, "İstanbul."), grade(sample, "İstanbul."), grade(sample, "Ankara.")];
+  withheld.result.status = "unavailable";
+  withheld.finalGrade.pass = false;
+  run.rows.push(repaired, withheld);
+  const curve = benchmarkView({ schemaVersion: 1, runs: [publicRun(run)] }).runs[0]!.summary[0]!.correction;
+  assert.equal(curve.n, 3);
+  assert.deepEqual(curve.stages, [1/3, 2/3, 1]);
+  assert.equal(curve.sentRate, 2/3);
 });

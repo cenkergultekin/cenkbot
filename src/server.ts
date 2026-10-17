@@ -5,6 +5,8 @@ import { loadSettings, parseStyle, parseTurns, VERSION } from "./config.js";
 import { createBot } from "./engine.js";
 import { openRouter } from "./provider.js";
 import { createJev } from "./jev.js";
+import { benchmarkView } from "./benchmark-view.js";
+import type { PublicIndex } from "./eval/publish.js";
 
 export function authorized(header: string | undefined, token: string | undefined) {
   if (!token || !header?.startsWith("Bearer ")) return false;
@@ -38,7 +40,8 @@ export async function startServer() {
       if (req.method === "GET" && path === "/api/health") return send(res, 200, { ok: true, version: VERSION, chatConfigured: !!process.env.OPENROUTER_API_KEY && (!(config.queryGate || config.responseGate) || !!gate), benchmark: "eval/public.json" });
       if (req.method === "GET" && path === "/cenkbot/data.json") {
         res.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "public, max-age=60" });
-        return res.end(await readFile(new URL("../eval/public.json", import.meta.url), "utf8"));
+        const published = JSON.parse(await readFile(new URL("../eval/public.json", import.meta.url), "utf8")) as PublicIndex;
+        return res.end(JSON.stringify(benchmarkView(published)));
       }
       if (req.method === "GET" && ["/", "/cenkbot", "/cenkbot/", "/cenkbot/benchmark", "/cenkbot/benchmark/"].includes(path)) {
         const file = path.includes("benchmark") ? "benchmark.html" : "index.html";
