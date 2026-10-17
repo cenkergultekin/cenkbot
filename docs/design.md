@@ -29,3 +29,17 @@ Varsayılan tek model vardır. Opsiyonel `reasoningModel`, yalnız Jev'in reason
 RAG, `knowledge` içine bütün belgeleri koymak yerine indeks sürümüyle kayıtlı retrieval bağlamı sağlayacak. Chunking, embedding, top-k ve reranker değişiklikleri aynı deney şemasına eklenecek; ilgili belgeyi bulma başarısı ile yanıt doğruluğu ayrı ölçülecek. Şimdiki sürümde indeks, embedding, vektör veritabanı veya agent araç yürütmesi yoktur.
 
 Agentic akışlar gerçek bir kullanım ihtiyacı olduğunda eklenecek: araç yetkisi, çağrı bütçesi, hata/iptal ve yan etki testleriyle. Bu sürümün bunları yaptığı iddia edilmez.
+
+
+## Benchmark sunumu
+
+Referans: [GPT-6 Astra tanıtımı](https://openai.com/index/gpt-6-astra/). Yetenek alanları, karşılaştırma grafikleri, örnek yanıtlar ve yöntemin birlikte sunulması esas alındı. Cenkbot kendi kâğıt/mürekkep paletini ve açık, çerçevesiz düzenini korur. Grafikler DOM/SVG ile çizilir; ek chart bağımlılığı veya model çağrısı yoktur.
+
+- Test başarısı sekmeleri kayıtların kategori alanından türetilir. Payda seçili kategorinin bütün turlarıdır. İnsan dil kalitesi puanı olarak sunulmaz.
+- Jev paneli seçili modellerin bütün mekanizmalarını aynı koşuda gösterir; üstteki mekanizma filtresinden bağımsızdır. Hız/maliyet paneli bütün mekanizmalar seçildiğinde yalnız baseline kullanır ve bunu açıklar. Yetenek sekmeleri yalnız test başarısı panelini değiştirir.
+- Yanıt p95'i `status=ok` ve gerçek taslağı bulunan turlardan türetilir. Otomatik testi geçemeyen gönderilmiş yanıtlar süre örnekleminde kalır. Hazır selam, refusal ve unavailable süreleri dışarıda; hata dahil eski p50/p95 tabloda korunur. Bu TTFT değildir.
+- 401/402/403 erişim/bütçe engeli olan koşuda hız/maliyet grafikleri ve sürüm farkı kapatılır. 429 dahil erişim hataları uyarıda ve ham kayıtlarında görünür; eksik yanıt süreleri grafik noktası üretmez. Başlangıç seçimi son engellenmemiş koşudur, en yeni koşu gizlenmez.
+- Taslak eğrisi ilk taslağı olan sabit örneklemde ilerler; sonraki aşamaya girmeyen tur son taslağını korur. Böylece daralan aşama örneklemleri birbiriyle bağlanmaz. İlk/son çubukları aynı turların ilk taslağı ile gerçek gönderim sonucunu karşılaştırır. Gönderilemeyen son taslak başarısızdır. Kurtarma/bozma oranları ayrıca yalnız düzeltilen alt kümenin kendi paydalarıyla açıklanır.
+- Tam veri, sürüm koşulları, bütün turların süre tablosu ve gerçek taslaklar açılabilir ayrıntılardadır. Metin `textContent` ile eklenir; model çıktısı HTML olarak çalıştırılmaz. Sekmeler ok tuşları/Home/End ile erişilebilir; grafik sayıları metin olarak da okunabilir. Mobilde grafikler tek sütuna iner.
+
+Sunum commit'i chatbot davranış sürümünü artırmaz. Yeni davranış ölçümü ayrı run ID/commit ile yayımlanır; eski sonuçların puanı değiştirilmez.

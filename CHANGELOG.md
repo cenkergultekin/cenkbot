@@ -1,5 +1,12 @@
 # Changelog
 
+## Benchmark presentation · 2026-10-17
+
+- Capability tabs, per-model mechanism comparisons, quality/latency and quality/cost plots, and an interactive release history replace the initial table-first layout.
+- Correction graphics distinguish fixed-cohort draft progress from final delivery. Conditional stage samples and paired-rate denominators remain inspectable.
+- Response latency excludes unavailable, withheld and static-greeting turns; the original failure-inclusive table remains available. Access/quota-blocked runs cannot appear as fast winners or causal release improvements.
+- No chatbot behavior, historical result or model configuration changed. No paid eval was run for this presentation revision; chatbot version remains 0.1.3.
+
 ## 0.1.3 · 2026-10-17
 
 - `policy@2`: a style-only concision miss may request a repair, but cannot suppress an otherwise usable answer after the configured repair limit. Grounding, language, context, non-answer and privacy failures remain blocking.
