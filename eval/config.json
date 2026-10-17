@@ -1,0 +1,5 @@
+{
+  "version": "0.1.0", "model": "openai/gpt-6-luna", "queryGate": true,
+  "responseGate": true, "maxRepairs": 1, "maxTokens": 256,
+  "timeoutMs": 12000, "temperature": 0, "gateFailure": "closed"
+}

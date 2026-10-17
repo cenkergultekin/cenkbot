@@ -1,0 +1,22 @@
+{
+  "name": "cenkbot",
+  "version": "0.1.0",
+  "description": "Small chatbots with versioned quality, latency and cost experiments.",
+  "type": "module",
+  "exports": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "private": true,
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "build": "tsc",
+    "test": "tsx --test src/tests/*.test.ts",
+    "start": "tsx src/server.ts",
+    "eval": "tsx src/eval/cli.ts",
+    "models": "tsx src/eval/catalog.ts",
+    "benchmark:publish": "tsx src/eval/publish.ts",
+    "benchmark:compare": "tsx src/eval/compare.ts"
+  },
+  "dependencies": { "@typesafe-ai/sdk": "0.7.0" },
+  "devDependencies": { "@types/node": "^22.0.0", "tsx": "^4.0.0", "typescript": "^5.9.0" }
+}

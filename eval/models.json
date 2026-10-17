@@ -1,0 +1,78 @@
+{
+  "checkedAt": "2026-10-17",
+  "source": "https://openrouter.ai/api/v1/models",
+  "selectionStatus": "unmeasured",
+  "note": "Catalog availability and price snapshot, not a benchmark. No winner selected. Default is provisional.",
+  "models": [
+    {
+      "id": "openai/gpt-6-luna",
+      "inputUsdPerMillion": 0.1,
+      "outputUsdPerMillion": 0.5,
+      "role": "cost-quality-latency-candidate",
+      "contextLength": 1050000
+    },
+    {
+      "id": "anthropic/claude-haiku-5.5",
+      "inputUsdPerMillion": 0.1,
+      "outputUsdPerMillion": 0.5,
+      "role": "cost-quality-latency-candidate",
+      "contextLength": 1000000
+    },
+    {
+      "id": "qwen/qwen3.7-flash",
+      "inputUsdPerMillion": 0.03,
+      "outputUsdPerMillion": 0.13,
+      "role": "cost-quality-latency-candidate",
+      "contextLength": 1000000
+    },
+    {
+      "id": "qwen/qwen3.8-flash",
+      "inputUsdPerMillion": 0.15,
+      "outputUsdPerMillion": 0.47,
+      "role": "cost-quality-latency-candidate",
+      "contextLength": 1000000
+    },
+    {
+      "id": "deepseek/deepseek-v4.1-flash-1017",
+      "inputUsdPerMillion": 0.15,
+      "outputUsdPerMillion": 0.6,
+      "role": "cost-quality-latency-candidate",
+      "contextLength": 1048576
+    },
+    {
+      "id": "google/gemini-2.5-flash-lite",
+      "inputUsdPerMillion": 0.1,
+      "outputUsdPerMillion": 0.4,
+      "role": "cost-quality-latency-candidate",
+      "contextLength": 1048576
+    },
+    {
+      "id": "google/gemini-3.5-flash-lite",
+      "inputUsdPerMillion": 0.3,
+      "outputUsdPerMillion": 2.5,
+      "role": "cost-quality-latency-candidate",
+      "contextLength": 1048576
+    },
+    {
+      "id": "mistralai/mistral-small-3.2-24b-instruct",
+      "inputUsdPerMillion": 0.09375,
+      "outputUsdPerMillion": 0.25,
+      "role": "cost-quality-latency-candidate",
+      "contextLength": 256000
+    },
+    {
+      "id": "meta-llama/llama-4-scout",
+      "inputUsdPerMillion": 0.1,
+      "outputUsdPerMillion": 0.3,
+      "role": "cost-quality-latency-candidate",
+      "contextLength": 1310720
+    },
+    {
+      "id": "openai/gpt-oss-20b",
+      "inputUsdPerMillion": 0.018,
+      "outputUsdPerMillion": 0.09,
+      "role": "cost-quality-latency-candidate",
+      "contextLength": 131072
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env*
+eval/runs/
+eval/reviews/
+*.log
+coverage/
