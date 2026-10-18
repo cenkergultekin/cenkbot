@@ -55,6 +55,19 @@ test("style-only failure at the repair limit does not suppress a usable answer",
   const r = await bot({}, generator(["Ankara'da, bir bisiklet atölyesi."]), j).answer({ turns });
   assert.equal(r.status, "ok"); assert.equal(r.attempts.length, 2); assert.equal(r.attempts[1]?.acceptedStyleOnly, true);
 });
+test("a failed style rewrite keeps the draft and does not call a third model", async () => {
+  let calls = 0;
+  const g: Generator = { async complete(input) { calls++; if (calls > 1) throw new RequestError("limit", { ...rec("repair", null), status: "error" }); return { text: "Ankara'da, uzun bir cümle.", record: rec(input.purpose) }; } };
+  const j = gate(); j.judge = async () => ({ action: "repair", reasons: ["concise"], record: rec("judge") });
+  const r = await bot({}, g, j).answer({ turns });
+  assert.equal(calls, 2); assert.equal(r.status, "ok"); assert.equal(r.text, "Ankara'da, uzun bir cümle."); assert.equal(r.attempts.length, 1); assert.equal(r.attempts[0]?.acceptedStyleOnly, true);
+});
+test("a failed rewrite of a hard defect still withholds the draft", async () => {
+  let calls = 0;
+  const g: Generator = { async complete(input) { calls++; if (calls > 1) throw new RequestError("limit", { ...rec("repair", null), status: "error" }); return { text: "Yanlış.", record: rec(input.purpose) }; } };
+  const r = await bot({}, g, gate(["repair"])).answer({ turns });
+  assert.equal(calls, 2); assert.equal(r.status, "unavailable"); assert.notEqual(r.text, "Yanlış."); assert.equal(r.attempts[0]?.acceptedStyleOnly, undefined);
+});
 test("a hard defect cannot hide behind a simultaneous style defect", async () => {
   const j = gate(); j.judge = async () => ({ action: "repair", reasons: ["concise", "grounded"], record: rec("judge") });
   const r = await bot({}, generator(), j).answer({ turns }); assert.equal(r.status, "unavailable"); assert.equal(r.attempts[1]?.acceptedStyleOnly, undefined);

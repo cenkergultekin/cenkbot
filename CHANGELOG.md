@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1 · 2026-10-18
+
+- Keep a usable draft when its only defect is style and the single rewrite request fails. A hard defect is still withheld. No extra model is called.
+
 ## 0.2.0 · 2026-10-18
 
 - Reframe Cenkbot as a reusable portfolio chatbot rather than a personal evaluation project.

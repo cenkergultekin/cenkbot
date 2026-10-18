@@ -83,6 +83,13 @@ export function createBot(deps: { generator: Generator; gate?: Gate; config: Con
         prompt = repairPrompt(system, completion.text, attempt.reasons);
       } catch (error) {
         if (error instanceof RequestError) result.requests.push(error.record);
+        // A failed rewrite does not start another model. A style-only draft still ships.
+        const prior = result.attempts.at(-1);
+        if (index > 0 && prior && prior.reasons.length > 0 && prior.reasons.every(reason => SOFT_REPAIR_REASONS.has(reason))) {
+          prior.acceptedStyleOnly = true;
+          result.text = prior.text;
+          return finish();
+        }
         return unavailable();
       }
     }

@@ -1,7 +1,7 @@
 import { readFile, readdir } from "node:fs/promises";
 import { resolve, join, basename } from "node:path";
 import type { Config, Model, Profile, Style, Turn } from "./types.js";
-export const VERSION = "0.2.0";
+export const VERSION = "0.2.1";
 export const PROMPT_VERSION = "prompt@2";
 export const POLICY_VERSION = "policy@2";
 export const SOFT_REPAIR_REASONS: ReadonlySet<string> = new Set(["concise"]);
