@@ -1,7 +1,7 @@
 import { readFile, readdir } from "node:fs/promises";
 import { resolve, join, basename } from "node:path";
 import type { Config, Model, Profile, Style, Turn } from "./types.js";
-export const VERSION = "0.2.1";
+export const VERSION = "0.2.2";
 export const PROMPT_VERSION = "prompt@2";
 export const POLICY_VERSION = "policy@2";
 export const SOFT_REPAIR_REASONS: ReadonlySet<string> = new Set(["concise"]);
@@ -15,7 +15,7 @@ export async function loadSettings() {
   const profile = await json<Profile>(path("content/profile.json"));
   config.version = VERSION;
   if (process.env.CENKBOT_MODEL) config.model = process.env.CENKBOT_MODEL;
-  const mode = process.env.CENKBOT_MODE ?? "basic";
+  const mode = process.env.CENKBOT_MODE ?? (process.env.TYPESAFE_API_KEY ? "reviewed" : "basic");
   if (!["basic", "reviewed"].includes(mode)) throw new Error("CENKBOT_MODE must be basic or reviewed");
   config.queryGate = mode === "reviewed";
   config.responseGate = mode === "reviewed";

@@ -37,13 +37,13 @@ npm install
 cp .env.example .env.local
 ```
 
-Add your OpenRouter key to `.env.local`, then:
+Add your OpenRouter and Jev keys to `.env.local`, then:
 
 ```sh
 npm start
 ```
 
-Visit **http://localhost:3400** and try the included fictional portfolio. Replace the files in `content/` with your own public information before publishing.
+Visit **http://localhost:3400**. The included fictional portfolio answers through local retrieval, Jev routing, one model reply and one reviewed rewrite. Without a Jev key, Cenkbot stays on retrieval and a single reply. Replace `content/` before publishing your own information.
 
 ## Make it yours
 

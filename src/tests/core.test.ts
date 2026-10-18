@@ -18,6 +18,19 @@ const gate = (verdicts: ("send" | "repair" | "refuse")[] = ["send"]): Gate => { 
 }; };
 const bot = (c: Partial<Config> = {}, g = generator(), j: Gate | undefined = gate()) => createBot({ config: { ...config, queryGate: true, responseGate: true, maxRepairs: 1, ...c }, profile, generator: g, gate: j });
 
+test("both API keys select routing and review unless mode is explicit", async () => {
+  const previous = { mode: process.env.CENKBOT_MODE, jev: process.env.TYPESAFE_API_KEY };
+  const restore = () => { for (const [key, value] of [["CENKBOT_MODE", previous.mode], ["TYPESAFE_API_KEY", previous.jev]] as const) { if (value === undefined) delete process.env[key]; else process.env[key] = value; } };
+  try {
+    delete process.env.CENKBOT_MODE; process.env.TYPESAFE_API_KEY = "present";
+    const reviewed = await loadSettings();
+    assert.equal(reviewed.config.queryGate, true); assert.equal(reviewed.config.responseGate, true); assert.equal(reviewed.config.maxRepairs, 1);
+    process.env.CENKBOT_MODE = "basic";
+    assert.equal((await loadSettings()).config.responseGate, false);
+    delete process.env.TYPESAFE_API_KEY; delete process.env.CENKBOT_MODE;
+    assert.equal((await loadSettings()).config.responseGate, false);
+  } finally { restore(); }
+});
 test("whole greeting has no external calls", async () => {
   const b = bot({}, { complete: async () => { throw Error("Must not call"); } });
   const r = await b.answer({ turns: [{ role: "user", content: "merhaba!" }] });

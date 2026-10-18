@@ -16,9 +16,9 @@ There is one selected generation request. No speculative drafts, provider race o
 
 ## Choose review
 
-`CENKBOT_MODE=basic` uses local retrieval and one model response.
+With `OPENROUTER_API_KEY` and `TYPESAFE_API_KEY` set, Cenkbot runs retrieval, Jev routing, one model reply, Jev review and at most one rewrite. Missing or unavailable Jev fails closed. Grounding, language, context and privacy defects block the reply. A concision-only defect may be accepted when the rewrite cannot improve it. Jev checks are probabilistic, not a correctness guarantee.
 
-`CENKBOT_MODE=reviewed` adds Jev question routing, reply review and at most one sequential rewrite. Set `TYPESAFE_API_KEY`; missing or unavailable Jev fails closed. Grounding, language, context and privacy defects block the reply. A concision-only defect may be accepted after the rewrite limit. Jev checks are probabilistic, not a correctness guarantee.
+Set `CENKBOT_MODE=basic` for retrieval and one reply only. That is also the automatic mode when the Jev key is absent.
 
 ## Conversation style
 

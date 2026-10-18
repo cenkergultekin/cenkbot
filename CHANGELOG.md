@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2 · 2026-10-18
+
+- Run retrieval, Jev routing, one reply and one review when both API keys are present. Basic mode remains available without a Jev key or with `CENKBOT_MODE=basic`.
+
 ## 0.2.1 · 2026-10-18
 
 - Keep a usable draft when its only defect is style and the single rewrite request fails. A hard defect is still withheld. No extra model is called.
