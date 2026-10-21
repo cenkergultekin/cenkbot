@@ -1,10 +1,27 @@
 # Add Cenkbot to your site
 
+The quickest way is `npm run setup` inside the `cenkbot/` folder of your website, or let a coding agent follow [`setup/AGENT.md`](../setup/AGENT.md). This page explains the pieces the setup uses.
+
+## Same-origin route
+
+`createChatHandler` returns a `(request: Request) => Promise<Response>` handler for any framework with Fetch API routes. It loads your content lazily, validates turns and style, limits visitors (six requests per minute per forwarded IP, 100 per day, two at a time) and returns only `text`, `status`, `version` and source titles.
+
+```ts
+// app/api/cenkbot/route.ts (Next.js app router)
+import path from "node:path";
+import { createChatHandler } from "cenkbot";
+
+export const runtime = "nodejs";
+export const POST = createChatHandler({ root: path.join(process.cwd(), "cenkbot") });
+```
+
+Add `cenkbot` as a local dependency (`"cenkbot": "file:./cenkbot"`) after building it. Point the widget at the route: `<cenk-bot endpoint="/api/cenkbot">`. Limits live in memory, so they are per server instance.
+
 ## Widget
 
 Host the included service, then add the script and element from the README. The widget uses the same original Cenkbot icon as cenker.dev. It isolates its styles, renders replies as plain text, supports keyboard closing, and keeps API keys out of the browser.
 
-The `endpoint` attribute can point to your own same-origin backend or the service’s public `/api/chat` route. A cross-domain service must allow your website’s exact origin. The `lang` attribute selects English or Turkish UI and reply preference.
+The `endpoint` attribute can point to your own same-origin route or the service’s public `/api/chat` route. `name` sets the title, `greeting` the first message and `placeholder` the input hint. A cross-domain service must allow your website’s exact origin. The `lang` attribute selects English or Turkish UI and reply preference.
 
 ## Inside your backend
 
