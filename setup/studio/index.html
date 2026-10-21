@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cenkbot kurulum</title>
+<link rel="icon" href="/cenkbot.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/studio.css">
+<script src="/widget.js" defer></script>
+<script src="/studio.js" defer></script>
+</head>
+<body>
+<header class="top">
+  <a class="mark" href="#look"><img src="/cenkbot.svg" alt=""><span>cenkbot</span></a>
+  <nav aria-label="steps">
+    <a href="#look" data-t="navLook">görünüm</a>
+    <a href="#about" data-t="navAbout">hakkında</a>
+    <a href="#keys" data-t="navKeys">anahtarlar</a>
+    <a href="#site" data-t="navSite">siteye bağla</a>
+  </nav>
+  <div class="lang" role="group" aria-label="language">
+    <button type="button" data-lang="tr">TR</button><button type="button" data-lang="en">EN</button>
+  </div>
+</header>
+
+<main class="studio">
+  <form class="steps" id="form" novalidate>
+    <section class="intro">
+      <h1 data-t="title">Sitene küçük bir asistan.</h1>
+      <p data-t="lead">Nasıl görüneceğini seç, ne bildiğini yaz, anahtarlarını ekle. Sağda gördüğün, sitende göreceğin şeyin aynısı.</p>
+    </section>
+
+    <section id="look">
+      <h2 data-t="look">Görünüm</h2>
+      <div class="field">
+        <span class="label" data-t="icon">İkon</span>
+        <div class="icons" role="radiogroup" aria-label="icon">
+          <button type="button" class="icon-option" data-icon="cenkbot" role="radio"><img src="/icons/cenkbot.svg" alt="Cenkbot"></button>
+          <button type="button" class="icon-option" data-icon="bubble" role="radio"><img src="/icons/bubble.svg" alt="bubble"></button>
+          <button type="button" class="icon-option" data-icon="spark" role="radio"><img src="/icons/spark.svg" alt="spark"></button>
+          <button type="button" class="icon-option" data-icon="letter" role="radio"><img id="letterIcon" alt="letter"></button>
+          <label class="icon-option upload" data-icon="custom"><img id="customIcon" alt="" hidden><span data-t="upload">kendi görselin</span><input type="file" id="iconFile" accept="image/png,image/jpeg,image/svg+xml,image/webp"></label>
+        </div>
+      </div>
+      <label class="field"><span class="label" data-t="botName">Adı</span><input id="botName" maxlength="60" autocomplete="off"></label>
+      <label class="field"><span class="label" data-t="greeting">İlk mesajı</span><input id="greeting" maxlength="400" autocomplete="off"></label>
+      <label class="field"><span class="label" data-t="placeholder">Yazı alanındaki ipucu</span><input id="placeholder" maxlength="80" autocomplete="off"></label>
+      <div class="field">
+        <span class="label" data-t="accent">Renk</span>
+        <div class="swatches">
+          <button type="button" class="swatch" data-color="#5b4bd6" aria-label="violet"></button>
+          <button type="button" class="swatch" data-color="#2547c4" aria-label="blue"></button>
+          <button type="button" class="swatch" data-color="#0f8b6e" aria-label="green"></button>
+          <button type="button" class="swatch" data-color="#d9653b" aria-label="orange"></button>
+          <button type="button" class="swatch" data-color="#c43b6e" aria-label="rose"></button>
+          <button type="button" class="swatch" data-color="#1f1d24" aria-label="ink"></button>
+          <input type="color" id="accent" aria-label="custom color">
+        </div>
+      </div>
+      <div class="field">
+        <span class="label" data-t="position">Konum</span>
+        <div class="choice" data-name="position"><button type="button" data-value="right" data-t="right">sağ alt</button><button type="button" data-value="left" data-t="left">sol alt</button></div>
+      </div>
+    </section>
+
+    <section id="about">
+      <h2 data-t="about">Hakkında</h2>
+      <p class="note" data-t="aboutNote">Burada yazdığın her şeyi ziyaretçiler sorabilir. Yalnızca herkese açık bilgi yaz.</p>
+      <div class="field">
+        <span class="label" data-t="language">Yanıt dili</span>
+        <div class="choice" data-name="language"><button type="button" data-value="tr">Türkçe</button><button type="button" data-value="en">English</button></div>
+      </div>
+      <label class="field"><span class="label" data-t="owner">Site kimin?</span><input id="owner" maxlength="80" autocomplete="off" required></label>
+      <label class="field"><span class="label" data-t="aboutText">Kendini ve işini anlat</span><textarea id="about-text" rows="4" maxlength="2000" required></textarea></label>
+      <div class="field">
+        <span class="label" data-t="projects">Projeler</span>
+        <div id="projects" class="projects"></div>
+        <button type="button" class="link" id="addProject" data-t="addProject">+ proje ekle</button>
+      </div>
+      <label class="field"><span class="label" data-t="contact">İletişim</span><input id="contact" maxlength="300" autocomplete="off"></label>
+      <div class="field">
+        <span class="label" data-t="tone">Tavır</span>
+        <div class="choice" data-name="tone"><button type="button" data-value="warm" data-t="warm">sıcak</button><button type="button" data-value="formal" data-t="formal">resmî</button><button type="button" data-value="neutral" data-t="neutral">nötr</button></div>
+      </div>
+      <div class="field">
+        <span class="label" data-t="detail">Yanıt uzunluğu</span>
+        <div class="choice" data-name="detail"><button type="button" data-value="brief" data-t="brief">kısa</button><button type="button" data-value="balanced" data-t="balanced">dengeli</button></div>
+      </div>
+      <p class="note" id="docs"></p>
+    </section>
+
+    <section id="keys">
+      <h2 data-t="keys">Anahtarlar</h2>
+      <p class="note" data-t="keysNote">Anahtarlar yalnızca bu bilgisayardaki .env.local dosyasına yazılır, tarayıcıya ya da siteye gitmez.</p>
+      <label class="field">
+        <span class="label">OpenRouter <a href="https://openrouter.ai/keys" target="_blank" rel="noopener" data-t="getKey">anahtar al</a></span>
+        <input id="openrouter" type="password" autocomplete="off" spellcheck="false">
+        <span class="state" id="openrouterState"></span>
+      </label>
+      <label class="field"><span class="label" data-t="model">Model</span><input id="model" maxlength="128" autocomplete="off" spellcheck="false"><span class="hint" data-t="modelHint">openrouter/free ücretsiz bir model seçer. Daha tutarlı yanıt için belirli bir model yaz.</span></label>
+      <label class="toggle"><input type="checkbox" id="review"><span data-t="review">Jev ile yanıtları denetle</span></label>
+      <label class="field" id="jevField">
+        <span class="label">Jev <a href="https://typesafe.ai" target="_blank" rel="noopener" data-t="getKey">anahtar al</a></span>
+        <input id="jev" type="password" autocomplete="off" spellcheck="false">
+        <span class="state" id="jevState"></span>
+      </label>
+    </section>
+
+    <section id="site">
+      <h2 data-t="site">Siteye bağla</h2>
+      <p class="site-info" id="siteInfo"></p>
+      <label class="field"><span class="label" data-t="siteUrl">Sitenin adresi</span><input id="siteUrl" placeholder="https://" autocomplete="off" spellcheck="false"></label>
+      <label class="field" id="serviceField"><span class="label" data-t="serviceUrl">Cenkbot servisinin adresi</span><input id="serviceUrl" placeholder="https://chat.example.com" autocomplete="off" spellcheck="false"><span class="hint" data-t="serviceHint">Statik ya da başka altyapıdaki siteler için Cenkbot ayrı küçük bir servis olarak yayına çıkar.</span></label>
+      <button type="button" class="primary" id="connect" data-t="connect">Siteye ekle</button>
+      <div id="result" class="result" hidden></div>
+    </section>
+
+    <footer class="savebar">
+      <span id="status" role="status"></span>
+      <button type="submit" class="primary" id="save" data-t="save">Kaydet</button>
+    </footer>
+  </form>
+
+  <aside class="preview" aria-label="preview">
+    <div class="stage" id="stage">
+      <div class="mock">
+        <p class="mock-name" id="mockName"></p>
+        <p class="mock-text" id="mockText"></p>
+      </div>
+      <cenk-bot id="bot" inline open></cenk-bot>
+    </div>
+    <p class="hint" data-t="previewHint">Önizleme sohbeti kaydedilmiş bilgiyle ve anahtarınla çalışır.</p>
+  </aside>
+</main>
+</body>
+</html>
