@@ -8,3 +8,5 @@ export { createLocalRetriever } from "./steps/retrieve.js";
 export { createPortfolioBot } from "./portfolio.js";
 export type { Retriever, Source } from "./types.js";
 export { TrafficGuard } from "./limits.js";
+export { createChatHandler } from "./handler.js";
+export { loadSettings } from "./config.js";

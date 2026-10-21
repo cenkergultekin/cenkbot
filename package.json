@@ -1,18 +1,19 @@
 {
   "name": "cenkbot",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "A small, embeddable portfolio chatbot with local RAG, OpenRouter and optional Jev review.",
   "type": "module",
   "exports": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "license": "MIT",
   "repository": { "type": "git", "url": "git+https://github.com/cenkergultekin/cenkbot.git" },
-  "files": ["dist/index.*", "dist/config.*", "dist/types.*", "dist/prompts.*", "dist/provider.*", "dist/jev.*", "dist/engine.*", "dist/portfolio.*", "dist/limits.*", "dist/server.*", "dist/steps", "public", "assets", "config", "content", "docs", "examples", ".env.example", "LICENSE", "README.md"],
+  "files": ["dist/index.*", "dist/config.*", "dist/types.*", "dist/prompts.*", "dist/provider.*", "dist/jev.*", "dist/engine.*", "dist/portfolio.*", "dist/limits.*", "dist/server.*", "dist/handler.*", "dist/steps", "setup", "public", "assets", "config", "content", "docs", "examples", ".env.example", "LICENSE", "README.md"],
   "engines": { "node": ">=22" },
   "scripts": {
     "check": "tsc --noEmit",
     "build": "tsc",
     "test": "tsx --test src/tests/*.test.ts",
+    "setup": "node setup/cli.mjs",
     "prestart": "npm run build",
     "start": "node --env-file-if-exists=.env.local dist/server.js",
     "dev": "node --env-file-if-exists=.env.local --import tsx --watch src/server.ts"

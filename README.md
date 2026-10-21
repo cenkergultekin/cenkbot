@@ -7,7 +7,7 @@
 <p align="center"><strong>A small chatbot that knows your work.</strong></p>
 
 <p align="center">
-  <a href="#get-started">Get started</a> ·
+  <a href="#add-it-to-your-website">Get started</a> ·
   <a href="docs/integration.md">Add it to your website</a> ·
   <a href="docs/setup.md">Make it yours</a>
 </p>
@@ -26,24 +26,34 @@ Built for personal websites, portfolios and small project pages. Bring your own 
 
 **Your website.** Use the drop-in widget, call the HTTP API, or bring the core into your own backend. API keys stay on the server.
 
-## Get started
+## Add it to your website
 
-Node.js 22 or newer.
+Node.js 22 or newer. From your website's folder:
 
 ```sh
 git clone https://github.com/cenkergultekin/cenkbot.git
 cd cenkbot
-npm install
-cp .env.example .env.local
+npm run setup
 ```
 
-Add your OpenRouter and Jev keys to `.env.local`, then:
+Answer a few questions about you and your work. The setup writes your content, installs and builds Cenkbot, and wires it into the site:
+
+- **Next.js (app router):** a chat route on your own domain, the widget in your root layout and keys in `.env.local`. Nothing else to host.
+- **Any other site:** Cenkbot runs as a small Node service and the widget snippet goes into your page.
+
+Add your [OpenRouter key](https://openrouter.ai/keys) where the setup tells you, start your site and open the chat bubble. Running the setup again is safe.
+
+**Using a coding agent?** Ask it: *"Set up Cenkbot on this site by following `cenkbot/setup/AGENT.md`."* It asks the questions, runs the setup and checks the result.
+
+## Try it on its own
 
 ```sh
+npm install
+cp .env.example .env.local
 npm start
 ```
 
-Visit **http://localhost:3400**. The included fictional portfolio answers through local retrieval, Jev routing, one model reply and one reviewed rewrite. Without a Jev key, Cenkbot stays on retrieval and a single reply. Replace `content/` before publishing your own information.
+Add your keys to `.env.local` and visit **http://localhost:3400**. The included fictional portfolio answers through local retrieval and one model reply, plus Jev routing and review when a Jev key is present. The setup replaces this example content with yours.
 
 ## Make it yours
 
@@ -56,16 +66,14 @@ Visit **http://localhost:3400**. The included fictional portfolio answers throug
 
 Basic mode uses local RAG and one model response. Reviewed mode adds Jev routing and reply checks, with at most one sequential rewrite. Free models have provider limits; Jev has separate usage costs. [Choose your setup](docs/setup.md).
 
-## Bring it to your website
+## Bring it to your website by hand
 
 ```html
 <script src="https://YOUR_CHAT_SERVICE/widget.js" defer></script>
-<cenk-bot endpoint="https://YOUR_CHAT_SERVICE/api/chat" lang="en"></cenk-bot>
+<cenk-bot endpoint="https://YOUR_CHAT_SERVICE/api/chat" lang="en" name="Ada's assistant" greeting="Hi! Ask me about my projects."></cenk-bot>
 ```
 
-Allow your website’s exact origin in `CENKBOT_ALLOWED_ORIGINS`. Use `lang="tr"` for Turkish. The included service has request limits for a small, single-instance deployment.
-
-Prefer your own interface? [Use the core or API](docs/integration.md).
+Allow your website's exact origin in `CENKBOT_ALLOWED_ORIGINS`. Use `lang="tr"` for Turkish. On a framework with Fetch API routes, `createChatHandler` gives you the same chat on your own domain. [Use the core, handler or API](docs/integration.md).
 
 ## Contribute
 

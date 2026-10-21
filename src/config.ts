@@ -1,16 +1,20 @@
 import { readFile, readdir } from "node:fs/promises";
-import { resolve, join, basename } from "node:path";
+import { resolve, join, basename, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Config, Model, Profile, Style, Turn } from "./types.js";
-export const VERSION = "0.2.2";
+export const VERSION = "0.3.0";
 export const PROMPT_VERSION = "prompt@2";
 export const POLICY_VERSION = "policy@2";
 export const SOFT_REPAIR_REASONS: ReadonlySet<string> = new Set(["concise"]);
 export const QUERY_VERSION = "query@1";
 export const RESPONSE_VERSION = "response@1";
 export async function json<T>(path: string | URL): Promise<T> { return JSON.parse(await readFile(path, "utf8")) as T; }
-export async function loadSettings() {
-  const root = process.env.CENKBOT_ROOT ? resolve(process.env.CENKBOT_ROOT) : new URL("../", import.meta.url);
-  const path = (file: string) => typeof root === "string" ? join(root, file) : new URL(file, root);
+/** Reads config/bot.json, content/profile.json and content/*.md from `root`, CENKBOT_ROOT or this package. */
+export async function loadSettings(dir?: string) {
+  const chosen = dir ?? process.env.CENKBOT_ROOT;
+  // A plain path, not new URL("../", import.meta.url): bundlers such as webpack treat that form as an asset import.
+  const root = chosen ? resolve(chosen) : resolve(dirname(fileURLToPath(import.meta.url)), "..");
+  const path = (file: string) => join(root, file);
   const config = await json<Config>(path("config/bot.json"));
   const profile = await json<Profile>(path("content/profile.json"));
   config.version = VERSION;
