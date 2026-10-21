@@ -1,6 +1,6 @@
 # Set up Cenkbot on a website (for coding agents)
 
-You are adding Cenkbot, a small portfolio chatbot, to the website in the current workspace. Follow these steps in order. Talk to the user in their language. Keep it short: one message with questions, one run, one report.
+You are adding Cenkbot, a small portfolio chatbot, to the website in the current workspace. People setting it up by hand use the visual setup (`npm run setup` in `cenkbot/`); you use the same setup script with an answers file. Follow these steps in order. Talk to the user in their language. Keep it short: one message with questions, one run, one report.
 
 ## Rules
 
@@ -49,6 +49,10 @@ Ask everything in one message. Offer the suggestions you drafted from the site s
 | `model` | OpenRouter model ID | `openrouter/free` |
 | `review` | Jev reply review on or off (needs a Jev key) | `false` |
 | `contentDir` | Optional folder of Markdown files with more public information | none |
+| `icon` | `cenkbot`, `bubble`, `spark`, `letter` (first letter of the owner) or a path to a PNG, JPEG, SVG or WebP under 512 KB | `cenkbot` |
+| `accent` | Widget color, `#rrggbb` | `#5b4bd6` |
+| `position` | `right` or `left` | `right` |
+| `greeting` | First message in the chat | a short hello in the chosen language |
 
 Also ask whether they already have an OpenRouter key (https://openrouter.ai/keys). Do not ask for its value.
 

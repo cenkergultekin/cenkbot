@@ -1,5 +1,5 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { timingSafeEqual } from "node:crypto";
 import { loadSettings, parseStyle, parseTurns, VERSION } from "./config.js";
 import { createPortfolioBot } from "./portfolio.js";
@@ -46,6 +46,14 @@ export async function startServer() {
         "/widget.js": ["public/widget.js", "text/javascript; charset=utf-8"],
         "/cenkbot.svg": ["assets/cenkbot.svg", "image/svg+xml"],
       };
+      if (req.method === "GET" && path === "/icon") {
+        // The icon chosen in setup (content/icon.*), or the default Cenkbot icon.
+        const content = new URL("../content/", import.meta.url);
+        const name = (await readdir(content)).find(file => /^icon\.(svg|png|jpe?g|webp)$/i.test(file));
+        const types: Record<string,string> = { svg:"image/svg+xml", png:"image/png", jpg:"image/jpeg", jpeg:"image/jpeg", webp:"image/webp" };
+        res.writeHead(200, { "Content-Type": name ? types[name.split(".").pop()!.toLowerCase()]! : "image/svg+xml", "Cache-Control": "public, max-age=300", "Access-Control-Allow-Origin": "*" });
+        return res.end(await readFile(name ? new URL(name, content) : new URL("../assets/cenkbot.svg", import.meta.url)));
+      }
       if (req.method === "GET" && files[path]) {
         const [file, type] = files[path]!;
         res.writeHead(200, {"Content-Type":type});
