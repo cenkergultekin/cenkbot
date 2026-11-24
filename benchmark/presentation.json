@@ -1,0 +1,1310 @@
+{
+  "schemaVersion": 2,
+  "humanReviewed": false,
+  "runs": [
+    {
+      "id": "2026-10-17T17-37-23-016Z-d175cf53",
+      "version": "0.1.2",
+      "startedAt": "2026-10-17T17:37:23.146Z",
+      "kind": "live",
+      "status": "complete",
+      "comparisonKey": "dbdc4a35e8196e4fc8b3d654414a2d8abaa8b62a0f2a1b25ec73142e87187998:395301e2a439721a8459b07ce3caf6820556f5de1d1bf6b347a4f6410ef252dc:live",
+      "questions": 36,
+      "repeats": 1,
+      "blocked": false,
+      "hasAccessErrors": false,
+      "summary": [
+        {
+          "model": "openai/gpt-6-luna",
+          "variant": "baseline",
+          "n": 36,
+          "passRate": 0.9166666666666666,
+          "latencyMs": 2494.5541999999987,
+          "answerN": 33,
+          "costPerPassUsd": 5.145454545454547e-05,
+          "correction": {
+            "n": 33,
+            "stages": [
+              0.9393939393939394
+            ],
+            "sentRate": 0.9393939393939394
+          },
+          "categories": {
+            "social": {
+              "n": 4,
+              "passRate": 1
+            },
+            "facts": {
+              "n": 7,
+              "passRate": 1
+            },
+            "typos": {
+              "n": 1,
+              "passRate": 1
+            },
+            "unknown": {
+              "n": 3,
+              "passRate": 0.6666666666666666
+            },
+            "privacy": {
+              "n": 2,
+              "passRate": 0.5
+            },
+            "commitment": {
+              "n": 1,
+              "passRate": 1
+            },
+            "false-premise": {
+              "n": 4,
+              "passRate": 1
+            },
+            "context": {
+              "n": 3,
+              "passRate": 1
+            },
+            "language": {
+              "n": 1,
+              "passRate": 1
+            },
+            "style": {
+              "n": 2,
+              "passRate": 1
+            },
+            "compose": {
+              "n": 2,
+              "passRate": 1
+            },
+            "reasoning": {
+              "n": 1,
+              "passRate": 1
+            },
+            "injection": {
+              "n": 3,
+              "passRate": 1
+            },
+            "scope": {
+              "n": 2,
+              "passRate": 0.5
+            }
+          },
+          "regressionRate": null,
+          "repairRate": 0
+        },
+        {
+          "model": "openai/gpt-6-luna",
+          "variant": "query",
+          "n": 36,
+          "passRate": 0.9166666666666666,
+          "latencyMs": 2660.0722000000096,
+          "answerN": 27,
+          "costPerPassUsd": null,
+          "correction": {
+            "n": 27,
+            "stages": [
+              0.9629629629629629
+            ],
+            "sentRate": 0.9629629629629629
+          },
+          "categories": {
+            "social": {
+              "n": 4,
+              "passRate": 1
+            },
+            "facts": {
+              "n": 7,
+              "passRate": 1
+            },
+            "typos": {
+              "n": 1,
+              "passRate": 0
+            },
+            "unknown": {
+              "n": 3,
+              "passRate": 1
+            },
+            "privacy": {
+              "n": 2,
+              "passRate": 0.5
+            },
+            "commitment": {
+              "n": 1,
+              "passRate": 1
+            },
+            "false-premise": {
+              "n": 4,
+              "passRate": 1
+            },
+            "context": {
+              "n": 3,
+              "passRate": 1
+            },
+            "language": {
+              "n": 1,
+              "passRate": 1
+            },
+            "style": {
+              "n": 2,
+              "passRate": 1
+            },
+            "compose": {
+              "n": 2,
+              "passRate": 1
+            },
+            "reasoning": {
+              "n": 1,
+              "passRate": 1
+            },
+            "injection": {
+              "n": 3,
+              "passRate": 1
+            },
+            "scope": {
+              "n": 2,
+              "passRate": 0.5
+            }
+          },
+          "regressionRate": null,
+          "repairRate": 0
+        },
+        {
+          "model": "openai/gpt-6-luna",
+          "variant": "guarded",
+          "n": 36,
+          "passRate": 0.8611111111111112,
+          "latencyMs": 2358.1493000000046,
+          "answerN": 25,
+          "costPerPassUsd": 0.00010501193548387098,
+          "correction": {
+            "n": 28,
+            "stages": [
+              0.9642857142857143
+            ],
+            "sentRate": 0.8571428571428571
+          },
+          "categories": {
+            "social": {
+              "n": 4,
+              "passRate": 1
+            },
+            "facts": {
+              "n": 7,
+              "passRate": 1
+            },
+            "typos": {
+              "n": 1,
+              "passRate": 1
+            },
+            "unknown": {
+              "n": 3,
+              "passRate": 1
+            },
+            "privacy": {
+              "n": 2,
+              "passRate": 0.5
+            },
+            "commitment": {
+              "n": 1,
+              "passRate": 0
+            },
+            "false-premise": {
+              "n": 4,
+              "passRate": 1
+            },
+            "context": {
+              "n": 3,
+              "passRate": 0.6666666666666666
+            },
+            "language": {
+              "n": 1,
+              "passRate": 1
+            },
+            "style": {
+              "n": 2,
+              "passRate": 0.5
+            },
+            "compose": {
+              "n": 2,
+              "passRate": 1
+            },
+            "reasoning": {
+              "n": 1,
+              "passRate": 1
+            },
+            "injection": {
+              "n": 3,
+              "passRate": 1
+            },
+            "scope": {
+              "n": 2,
+              "passRate": 0.5
+            }
+          },
+          "regressionRate": null,
+          "repairRate": 0
+        },
+        {
+          "model": "openai/gpt-6-luna",
+          "variant": "repair",
+          "n": 36,
+          "passRate": 0.9444444444444444,
+          "latencyMs": 4039.163799999995,
+          "answerN": 28,
+          "costPerPassUsd": 9.892605882352943e-05,
+          "correction": {
+            "n": 28,
+            "stages": [
+              0.9642857142857143,
+              0.9642857142857143
+            ],
+            "sentRate": 0.9642857142857143
+          },
+          "categories": {
+            "social": {
+              "n": 4,
+              "passRate": 1
+            },
+            "facts": {
+              "n": 7,
+              "passRate": 1
+            },
+            "typos": {
+              "n": 1,
+              "passRate": 1
+            },
+            "unknown": {
+              "n": 3,
+              "passRate": 1
+            },
+            "privacy": {
+              "n": 2,
+              "passRate": 0.5
+            },
+            "commitment": {
+              "n": 1,
+              "passRate": 1
+            },
+            "false-premise": {
+              "n": 4,
+              "passRate": 1
+            },
+            "context": {
+              "n": 3,
+              "passRate": 1
+            },
+            "language": {
+              "n": 1,
+              "passRate": 1
+            },
+            "style": {
+              "n": 2,
+              "passRate": 1
+            },
+            "compose": {
+              "n": 2,
+              "passRate": 1
+            },
+            "reasoning": {
+              "n": 1,
+              "passRate": 1
+            },
+            "injection": {
+              "n": 3,
+              "passRate": 1
+            },
+            "scope": {
+              "n": 2,
+              "passRate": 0.5
+            }
+          },
+          "regressionRate": 0,
+          "repairRate": 0.027777777777777776
+        },
+        {
+          "model": "openai/gpt-6-luna",
+          "variant": "repair2",
+          "n": 36,
+          "passRate": 0.9722222222222222,
+          "latencyMs": 3567.805800000002,
+          "answerN": 28,
+          "costPerPassUsd": 9.343571428571432e-05,
+          "correction": {
+            "n": 28,
+            "stages": [
+              0.9642857142857143,
+              0.9642857142857143
+            ],
+            "sentRate": 0.9642857142857143
+          },
+          "categories": {
+            "social": {
+              "n": 4,
+              "passRate": 1
+            },
+            "facts": {
+              "n": 7,
+              "passRate": 1
+            },
+            "typos": {
+              "n": 1,
+              "passRate": 1
+            },
+            "unknown": {
+              "n": 3,
+              "passRate": 1
+            },
+            "privacy": {
+              "n": 2,
+              "passRate": 0.5
+            },
+            "commitment": {
+              "n": 1,
+              "passRate": 1
+            },
+            "false-premise": {
+              "n": 4,
+              "passRate": 1
+            },
+            "context": {
+              "n": 3,
+              "passRate": 1
+            },
+            "language": {
+              "n": 1,
+              "passRate": 1
+            },
+            "style": {
+              "n": 2,
+              "passRate": 1
+            },
+            "compose": {
+              "n": 2,
+              "passRate": 1
+            },
+            "reasoning": {
+              "n": 1,
+              "passRate": 1
+            },
+            "injection": {
+              "n": 3,
+              "passRate": 1
+            },
+            "scope": {
+              "n": 2,
+              "passRate": 1
+            }
+          },
+          "regressionRate": 0,
+          "repairRate": 0.05555555555555555
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "variant": "baseline",
+          "n": 36,
+          "passRate": 0.9444444444444444,
+          "latencyMs": 1934.4357000000018,
+          "answerN": 34,
+          "costPerPassUsd": 9.195882352941177e-05,
+          "correction": {
+            "n": 34,
+            "stages": [
+              0.9411764705882353
+            ],
+            "sentRate": 0.9411764705882353
+          },
+          "categories": {
+            "social": {
+              "n": 4,
+              "passRate": 1
+            },
+            "facts": {
+              "n": 7,
+              "passRate": 1
+            },
+            "typos": {
+              "n": 1,
+              "passRate": 1
+            },
+            "unknown": {
+              "n": 3,
+              "passRate": 1
+            },
+            "privacy": {
+              "n": 2,
+              "passRate": 1
+            },
+            "commitment": {
+              "n": 1,
+              "passRate": 1
+            },
+            "false-premise": {
+              "n": 4,
+              "passRate": 0.75
+            },
+            "context": {
+              "n": 3,
+              "passRate": 1
+            },
+            "language": {
+              "n": 1,
+              "passRate": 1
+            },
+            "style": {
+              "n": 2,
+              "passRate": 1
+            },
+            "compose": {
+              "n": 2,
+              "passRate": 1
+            },
+            "reasoning": {
+              "n": 1,
+              "passRate": 0
+            },
+            "injection": {
+              "n": 3,
+              "passRate": 1
+            },
+            "scope": {
+              "n": 2,
+              "passRate": 1
+            }
+          },
+          "regressionRate": null,
+          "repairRate": 0
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "variant": "query",
+          "n": 36,
+          "passRate": 0.8888888888888888,
+          "latencyMs": 2041.2307000000146,
+          "answerN": 28,
+          "costPerPassUsd": 0.00010712937500000003,
+          "correction": {
+            "n": 28,
+            "stages": [
+              0.8571428571428571
+            ],
+            "sentRate": 0.8571428571428571
+          },
+          "categories": {
+            "social": {
+              "n": 4,
+              "passRate": 1
+            },
+            "facts": {
+              "n": 7,
+              "passRate": 1
+            },
+            "typos": {
+              "n": 1,
+              "passRate": 1
+            },
+            "unknown": {
+              "n": 3,
+              "passRate": 0.3333333333333333
+            },
+            "privacy": {
+              "n": 2,
+              "passRate": 0
+            },
+            "commitment": {
+              "n": 1,
+              "passRate": 1
+            },
+            "false-premise": {
+              "n": 4,
+              "passRate": 1
+            },
+            "context": {
+              "n": 3,
+              "passRate": 1
+            },
+            "language": {
+              "n": 1,
+              "passRate": 1
+            },
+            "style": {
+              "n": 2,
+              "passRate": 1
+            },
+            "compose": {
+              "n": 2,
+              "passRate": 1
+            },
+            "reasoning": {
+              "n": 1,
+              "passRate": 1
+            },
+            "injection": {
+              "n": 3,
+              "passRate": 1
+            },
+            "scope": {
+              "n": 2,
+              "passRate": 1
+            }
+          },
+          "regressionRate": null,
+          "repairRate": 0
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "variant": "guarded",
+          "n": 36,
+          "passRate": 0.5833333333333334,
+          "latencyMs": 2507.442800000019,
+          "answerN": 15,
+          "costPerPassUsd": 0.00021708780952380954,
+          "correction": {
+            "n": 28,
+            "stages": [
+              0.9285714285714286
+            ],
+            "sentRate": 0.5
+          },
+          "categories": {
+            "social": {
+              "n": 4,
+              "passRate": 0.5
+            },
+            "facts": {
+              "n": 7,
+              "passRate": 0.5714285714285714
+            },
+            "typos": {
+              "n": 1,
+              "passRate": 0
+            },
+            "unknown": {
+              "n": 3,
+              "passRate": 0.3333333333333333
+            },
+            "privacy": {
+              "n": 2,
+              "passRate": 0.5
+            },
+            "commitment": {
+              "n": 1,
+              "passRate": 0
+            },
+            "false-premise": {
+              "n": 4,
+              "passRate": 0.75
+            },
+            "context": {
+              "n": 3,
+              "passRate": 1
+            },
+            "language": {
+              "n": 1,
+              "passRate": 0
+            },
+            "style": {
+              "n": 2,
+              "passRate": 0.5
+            },
+            "compose": {
+              "n": 2,
+              "passRate": 1
+            },
+            "reasoning": {
+              "n": 1,
+              "passRate": 0
+            },
+            "injection": {
+              "n": 3,
+              "passRate": 1
+            },
+            "scope": {
+              "n": 2,
+              "passRate": 0.5
+            }
+          },
+          "regressionRate": null,
+          "repairRate": 0
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "variant": "repair",
+          "n": 36,
+          "passRate": 0.6944444444444444,
+          "latencyMs": 3099.3291000000027,
+          "answerN": 18,
+          "costPerPassUsd": 0.00022908872,
+          "correction": {
+            "n": 27,
+            "stages": [
+              0.9259259259259259,
+              0.9259259259259259
+            ],
+            "sentRate": 0.6296296296296297
+          },
+          "categories": {
+            "social": {
+              "n": 4,
+              "passRate": 0.75
+            },
+            "facts": {
+              "n": 7,
+              "passRate": 0.8571428571428571
+            },
+            "typos": {
+              "n": 1,
+              "passRate": 1
+            },
+            "unknown": {
+              "n": 3,
+              "passRate": 0.3333333333333333
+            },
+            "privacy": {
+              "n": 2,
+              "passRate": 0
+            },
+            "commitment": {
+              "n": 1,
+              "passRate": 0
+            },
+            "false-premise": {
+              "n": 4,
+              "passRate": 0.5
+            },
+            "context": {
+              "n": 3,
+              "passRate": 0.6666666666666666
+            },
+            "language": {
+              "n": 1,
+              "passRate": 1
+            },
+            "style": {
+              "n": 2,
+              "passRate": 1
+            },
+            "compose": {
+              "n": 2,
+              "passRate": 0.5
+            },
+            "reasoning": {
+              "n": 1,
+              "passRate": 1
+            },
+            "injection": {
+              "n": 3,
+              "passRate": 1
+            },
+            "scope": {
+              "n": 2,
+              "passRate": 1
+            }
+          },
+          "regressionRate": 0.8888888888888888,
+          "repairRate": 0.2777777777777778
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "variant": "repair2",
+          "n": 36,
+          "passRate": 0.8333333333333334,
+          "latencyMs": 5190.884299999991,
+          "answerN": 25,
+          "costPerPassUsd": 0.00023976399999999998,
+          "correction": {
+            "n": 29,
+            "stages": [
+              0.8620689655172413,
+              0.896551724137931,
+              0.896551724137931
+            ],
+            "sentRate": 0.7931034482758621
+          },
+          "categories": {
+            "social": {
+              "n": 4,
+              "passRate": 0.75
+            },
+            "facts": {
+              "n": 7,
+              "passRate": 1
+            },
+            "typos": {
+              "n": 1,
+              "passRate": 1
+            },
+            "unknown": {
+              "n": 3,
+              "passRate": 0.6666666666666666
+            },
+            "privacy": {
+              "n": 2,
+              "passRate": 0.5
+            },
+            "commitment": {
+              "n": 1,
+              "passRate": 1
+            },
+            "false-premise": {
+              "n": 4,
+              "passRate": 0.75
+            },
+            "context": {
+              "n": 3,
+              "passRate": 1
+            },
+            "language": {
+              "n": 1,
+              "passRate": 1
+            },
+            "style": {
+              "n": 2,
+              "passRate": 1
+            },
+            "compose": {
+              "n": 2,
+              "passRate": 1
+            },
+            "reasoning": {
+              "n": 1,
+              "passRate": 0
+            },
+            "injection": {
+              "n": 3,
+              "passRate": 1
+            },
+            "scope": {
+              "n": 2,
+              "passRate": 0.5
+            }
+          },
+          "regressionRate": 0.2222222222222222,
+          "repairRate": 0.3333333333333333
+        },
+        {
+          "model": "google/gemini-2.5-flash-lite",
+          "variant": "baseline",
+          "n": 36,
+          "passRate": 0.7777777777777778,
+          "latencyMs": 1258.909,
+          "answerN": 34,
+          "costPerPassUsd": 5.005357142857143e-05,
+          "correction": {
+            "n": 34,
+            "stages": [
+              0.7647058823529411
+            ],
+            "sentRate": 0.7647058823529411
+          },
+          "categories": {
+            "social": {
+              "n": 4,
+              "passRate": 1
+            },
+            "facts": {
+              "n": 7,
+              "passRate": 1
+            },
+            "typos": {
+              "n": 1,
+              "passRate": 1
+            },
+            "unknown": {
+              "n": 3,
+              "passRate": 0.6666666666666666
+            },
+            "privacy": {
+              "n": 2,
+              "passRate": 1
+            },
+            "commitment": {
+              "n": 1,
+              "passRate": 0
+            },
+            "false-premise": {
+              "n": 4,
+              "passRate": 0.75
+            },
+            "context": {
+              "n": 3,
+              "passRate": 0.6666666666666666
+            },
+            "language": {
+              "n": 1,
+              "passRate": 1
+            },
+            "style": {
+              "n": 2,
+              "passRate": 1
+            },
+            "compose": {
+              "n": 2,
+              "passRate": 1
+            },
+            "reasoning": {
+              "n": 1,
+              "passRate": 1
+            },
+            "injection": {
+              "n": 3,
+              "passRate": 0
+            },
+            "scope": {
+              "n": 2,
+              "passRate": 0.5
+            }
+          },
+          "regressionRate": null,
+          "repairRate": 0
+        },
+        {
+          "model": "google/gemini-2.5-flash-lite",
+          "variant": "query",
+          "n": 36,
+          "passRate": 0.8611111111111112,
+          "latencyMs": 1198.3966,
+          "answerN": 29,
+          "costPerPassUsd": 7.0798064516129e-05,
+          "correction": {
+            "n": 29,
+            "stages": [
+              0.8275862068965517
+            ],
+            "sentRate": 0.8275862068965517
+          },
+          "categories": {
+            "social": {
+              "n": 4,
+              "passRate": 1
+            },
+            "facts": {
+              "n": 7,
+              "passRate": 1
+            },
+            "typos": {
+              "n": 1,
+              "passRate": 1
+            },
+            "unknown": {
+              "n": 3,
+              "passRate": 0.6666666666666666
+            },
+            "privacy": {
+              "n": 2,
+              "passRate": 1
+            },
+            "commitment": {
+              "n": 1,
+              "passRate": 0
+            },
+            "false-premise": {
+              "n": 4,
+              "passRate": 0.75
+            },
+            "context": {
+              "n": 3,
+              "passRate": 0.6666666666666666
+            },
+            "language": {
+              "n": 1,
+              "passRate": 1
+            },
+            "style": {
+              "n": 2,
+              "passRate": 1
+            },
+            "compose": {
+              "n": 2,
+              "passRate": 1
+            },
+            "reasoning": {
+              "n": 1,
+              "passRate": 1
+            },
+            "injection": {
+              "n": 3,
+              "passRate": 1
+            },
+            "scope": {
+              "n": 2,
+              "passRate": 0.5
+            }
+          },
+          "regressionRate": null,
+          "repairRate": 0
+        },
+        {
+          "model": "google/gemini-2.5-flash-lite",
+          "variant": "guarded",
+          "n": 36,
+          "passRate": 0.7777777777777778,
+          "latencyMs": 1654.3417000000009,
+          "answerN": 24,
+          "costPerPassUsd": 0.00011177957142857145,
+          "correction": {
+            "n": 29,
+            "stages": [
+              0.8275862068965517
+            ],
+            "sentRate": 0.7241379310344828
+          },
+          "categories": {
+            "social": {
+              "n": 4,
+              "passRate": 0.5
+            },
+            "facts": {
+              "n": 7,
+              "passRate": 1
+            },
+            "typos": {
+              "n": 1,
+              "passRate": 1
+            },
+            "unknown": {
+              "n": 3,
+              "passRate": 0.6666666666666666
+            },
+            "privacy": {
+              "n": 2,
+              "passRate": 1
+            },
+            "commitment": {
+              "n": 1,
+              "passRate": 0
+            },
+            "false-premise": {
+              "n": 4,
+              "passRate": 0.75
+            },
+            "context": {
+              "n": 3,
+              "passRate": 0.6666666666666666
+            },
+            "language": {
+              "n": 1,
+              "passRate": 1
+            },
+            "style": {
+              "n": 2,
+              "passRate": 1
+            },
+            "compose": {
+              "n": 2,
+              "passRate": 0.5
+            },
+            "reasoning": {
+              "n": 1,
+              "passRate": 1
+            },
+            "injection": {
+              "n": 3,
+              "passRate": 1
+            },
+            "scope": {
+              "n": 2,
+              "passRate": 0.5
+            }
+          },
+          "regressionRate": null,
+          "repairRate": 0
+        },
+        {
+          "model": "google/gemini-2.5-flash-lite",
+          "variant": "repair",
+          "n": 36,
+          "passRate": 0.8055555555555556,
+          "latencyMs": 2006.6600000000035,
+          "answerN": 25,
+          "costPerPassUsd": 0.00012742924137931037,
+          "correction": {
+            "n": 29,
+            "stages": [
+              0.8275862068965517,
+              0.8275862068965517
+            ],
+            "sentRate": 0.7586206896551724
+          },
+          "categories": {
+            "social": {
+              "n": 4,
+              "passRate": 0.5
+            },
+            "facts": {
+              "n": 7,
+              "passRate": 1
+            },
+            "typos": {
+              "n": 1,
+              "passRate": 1
+            },
+            "unknown": {
+              "n": 3,
+              "passRate": 0.6666666666666666
+            },
+            "privacy": {
+              "n": 2,
+              "passRate": 1
+            },
+            "commitment": {
+              "n": 1,
+              "passRate": 0
+            },
+            "false-premise": {
+              "n": 4,
+              "passRate": 0.75
+            },
+            "context": {
+              "n": 3,
+              "passRate": 0.6666666666666666
+            },
+            "language": {
+              "n": 1,
+              "passRate": 1
+            },
+            "style": {
+              "n": 2,
+              "passRate": 1
+            },
+            "compose": {
+              "n": 2,
+              "passRate": 1
+            },
+            "reasoning": {
+              "n": 1,
+              "passRate": 1
+            },
+            "injection": {
+              "n": 3,
+              "passRate": 1
+            },
+            "scope": {
+              "n": 2,
+              "passRate": 0.5
+            }
+          },
+          "regressionRate": 0.6666666666666666,
+          "repairRate": 0.16666666666666666
+        },
+        {
+          "model": "google/gemini-2.5-flash-lite",
+          "variant": "repair2",
+          "n": 36,
+          "passRate": 0.8055555555555556,
+          "latencyMs": 2205.3161999999866,
+          "answerN": 25,
+          "costPerPassUsd": 0.00013819172413793103,
+          "correction": {
+            "n": 29,
+            "stages": [
+              0.8275862068965517,
+              0.8275862068965517,
+              0.8275862068965517
+            ],
+            "sentRate": 0.7586206896551724
+          },
+          "categories": {
+            "social": {
+              "n": 4,
+              "passRate": 0.5
+            },
+            "facts": {
+              "n": 7,
+              "passRate": 1
+            },
+            "typos": {
+              "n": 1,
+              "passRate": 1
+            },
+            "unknown": {
+              "n": 3,
+              "passRate": 0.6666666666666666
+            },
+            "privacy": {
+              "n": 2,
+              "passRate": 1
+            },
+            "commitment": {
+              "n": 1,
+              "passRate": 0
+            },
+            "false-premise": {
+              "n": 4,
+              "passRate": 0.75
+            },
+            "context": {
+              "n": 3,
+              "passRate": 0.6666666666666666
+            },
+            "language": {
+              "n": 1,
+              "passRate": 1
+            },
+            "style": {
+              "n": 2,
+              "passRate": 1
+            },
+            "compose": {
+              "n": 2,
+              "passRate": 1
+            },
+            "reasoning": {
+              "n": 1,
+              "passRate": 1
+            },
+            "injection": {
+              "n": 3,
+              "passRate": 1
+            },
+            "scope": {
+              "n": 2,
+              "passRate": 0.5
+            }
+          },
+          "regressionRate": 0.6666666666666666,
+          "repairRate": 0.1388888888888889
+        }
+      ]
+    },
+    {
+      "id": "2026-10-17T17-34-36-414Z-fbdee0d6",
+      "version": "0.1.1",
+      "startedAt": "2026-10-17T17:34:36.579Z",
+      "kind": "live",
+      "status": "complete",
+      "comparisonKey": "dbdc4a35e8196e4fc8b3d654414a2d8abaa8b62a0f2a1b25ec73142e87187998:395301e2a439721a8459b07ce3caf6820556f5de1d1bf6b347a4f6410ef252dc:live",
+      "questions": 36,
+      "repeats": 1,
+      "blocked": false,
+      "hasAccessErrors": false,
+      "summary": [
+        {
+          "model": "openai/gpt-6-luna",
+          "variant": "baseline",
+          "n": 36,
+          "passRate": 0.9166666666666666,
+          "latencyMs": 2312.6281000000017,
+          "answerN": 33,
+          "costPerPassUsd": null,
+          "correction": {
+            "n": 33,
+            "stages": [
+              0.9393939393939394
+            ],
+            "sentRate": 0.9393939393939394
+          }
+        },
+        {
+          "model": "anthropic/claude-haiku-5.5",
+          "variant": "baseline",
+          "n": 36,
+          "passRate": 0.8888888888888888,
+          "latencyMs": 2199.4324999999953,
+          "answerN": 34,
+          "costPerPassUsd": 9.787812499999999e-05,
+          "correction": {
+            "n": 34,
+            "stages": [
+              0.8823529411764706
+            ],
+            "sentRate": 0.8823529411764706
+          }
+        },
+        {
+          "model": "qwen/qwen3.8-flash",
+          "variant": "baseline",
+          "n": 36,
+          "passRate": 0.8333333333333334,
+          "latencyMs": 7075.960800000001,
+          "answerN": 29,
+          "costPerPassUsd": null,
+          "correction": {
+            "n": 29,
+            "stages": [
+              0.9655172413793104
+            ],
+            "sentRate": 0.9655172413793104
+          }
+        },
+        {
+          "model": "deepseek/deepseek-v4.1-flash-1017",
+          "variant": "baseline",
+          "n": 36,
+          "passRate": 0.9166666666666666,
+          "latencyMs": 3963.2992000000086,
+          "answerN": 34,
+          "costPerPassUsd": 7.948406060606062e-05,
+          "correction": {
+            "n": 34,
+            "stages": [
+              0.9117647058823529
+            ],
+            "sentRate": 0.9117647058823529
+          }
+        },
+        {
+          "model": "google/gemini-2.5-flash-lite",
+          "variant": "baseline",
+          "n": 36,
+          "passRate": 0.7777777777777778,
+          "latencyMs": 947.0619000000006,
+          "answerN": 34,
+          "costPerPassUsd": 5.005357142857143e-05,
+          "correction": {
+            "n": 34,
+            "stages": [
+              0.7647058823529411
+            ],
+            "sentRate": 0.7647058823529411
+          }
+        },
+        {
+          "model": "google/gemini-3.5-flash-lite",
+          "variant": "baseline",
+          "n": 36,
+          "passRate": 0.8611111111111112,
+          "latencyMs": 1816.1851000000024,
+          "answerN": 34,
+          "costPerPassUsd": 0.00018382258064516128,
+          "correction": {
+            "n": 34,
+            "stages": [
+              0.8529411764705882
+            ],
+            "sentRate": 0.8529411764705882
+          }
+        },
+        {
+          "model": "mistralai/mistral-small-3.2-24b-instruct",
+          "variant": "baseline",
+          "n": 36,
+          "passRate": 0.8055555555555556,
+          "latencyMs": 2964.2646999999997,
+          "answerN": 34,
+          "costPerPassUsd": 3.4411206896551716e-05,
+          "correction": {
+            "n": 34,
+            "stages": [
+              0.7941176470588235
+            ],
+            "sentRate": 0.7941176470588235
+          }
+        },
+        {
+          "model": "openai/gpt-oss-20b",
+          "variant": "baseline",
+          "n": 36,
+          "passRate": 0.7222222222222222,
+          "latencyMs": 7899.859400000001,
+          "answerN": 32,
+          "costPerPassUsd": null,
+          "correction": {
+            "n": 32,
+            "stages": [
+              0.75
+            ],
+            "sentRate": 0.75
+          }
+        }
+      ]
+    }
+  ]
+}
