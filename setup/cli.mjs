@@ -2,6 +2,8 @@
 /* Cenkbot setup: put this folder inside your website, answer a few questions, and Cenkbot is wired into the site.
  * Interactive:      npm run setup
  * From an answers file (for coding agents and CI):  npm run setup -- --answers cenkbot.answers.json [--skip-install] [--dry-run]
+ * Other flags: --content-only (write content and appearance, do not touch the website), --json (one JSON summary on stdout; used by the setup studio).
+ * The visual setup studio (npm run setup) calls this script with --answers --json.
  * API keys are never asked for in the answers file. They come from the environment, an interactive hidden prompt, or are left as placeholders.
  */
 import { createInterface } from "node:readline/promises";
@@ -33,7 +35,51 @@ const write = (file, text) => {
   writeFileSync(file, text);
 };
 const posix = path => path.split(sep).join("/");
+const quiet = args.has("json");
+const say = (...parts) => { if (!quiet) console.log(...parts); };
 const fail = message => { console.error(`\ncenkbot setup: ${message}`); exit(1); };
+
+/* ---------- appearance ---------- */
+const ICONS = ["cenkbot", "bubble", "spark", "letter"];
+const IMAGE = /\.(svg|png|jpe?g|webp)$/i;
+function appearance(given, a) {
+  const look = {
+    icon: String(given.icon ?? "cenkbot"),
+    accent: String(given.accent ?? "#5b4bd6"),
+    position: String(given.position ?? "right"),
+    greeting: String(given.greeting ?? "").trim(),
+    placeholder: String(given.placeholder ?? "").trim(),
+  };
+  if (!ICONS.includes(look.icon) && !(IMAGE.test(look.icon) && existsSync(resolve(look.icon)))) fail(`icon must be one of ${ICONS.join(", ")} or an existing image file`);
+  if (!/^#[0-9a-f]{6}$/i.test(look.accent)) fail("accent must be a #rrggbb color");
+  if (!["left", "right"].includes(look.position)) fail("position must be left or right");
+  if (look.greeting.length > 400 || look.placeholder.length > 80) fail("greeting or placeholder is too long");
+  look.greeting ||= a.language === "tr" ? `Merhaba! ${a.owner} hakkında, projeleri ve deneyimi üzerine sorabilirsin.` : `Hi! Ask me about ${a.owner}'s projects and experience.`;
+  return look;
+}
+const escapeXml = text => text.replace(/[<>&"]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" })[c]);
+function writeIcon(look, a) {
+  const content = join(bot, "content");
+  if (!dry) for (const name of existsSync(content) ? readdirSync(content) : []) if (/^icon\./.test(name)) rmSync(join(content, name));
+  if (look.icon === "letter") {
+    const letter = escapeXml((a.owner.trim()[0] || "C").toLocaleUpperCase(a.language === "tr" ? "tr-TR" : "en"));
+    write(join(content, "icon.svg"), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="18" fill="${look.accent}"/><text x="32" y="43" text-anchor="middle" font-family="ui-sans-serif,system-ui,sans-serif" font-size="30" font-weight="600" fill="#fff">${letter}</text></svg>\n`);
+    return "icon.svg";
+  }
+  const from = ICONS.includes(look.icon) ? join(bot, "assets/icons", `${look.icon}.svg`) : resolve(look.icon);
+  const name = `icon${from.slice(from.lastIndexOf(".")).toLowerCase()}`;
+  written.push(`content/${name}`);
+  if (!dry) { mkdirSync(content, { recursive: true }); copyFileSync(from, join(content, name)); }
+  return name;
+}
+// Entity-escaped attribute values are valid in HTML and in JSX string attributes alike.
+const attr = value => `"${escapeXml(String(value))}"`;
+function element(widget, a, endpoint, icon) {
+  const parts = [`endpoint="${endpoint}"`, `lang="${a.language}"`, `name=${attr(widget.name)}`, `greeting=${attr(widget.greeting)}`, `icon="${icon}"`, `accent="${widget.accent}"`];
+  if (widget.position !== "right") parts.push(`position="${widget.position}"`);
+  if (widget.placeholder) parts.push(`placeholder=${attr(widget.placeholder)}`);
+  return `<cenk-bot ${parts.join(" ")}></cenk-bot>`;
+}
 
 /* ---------- answers ---------- */
 const QUESTIONS = [
@@ -116,7 +162,7 @@ function inspect(site) {
 }
 
 /* ---------- content ---------- */
-function writeContent(a) {
+function writeContent(a, look) {
   const tr = a.language === "tr";
   const profileFile = join(bot, "content/profile.json");
   const profile = json(profileFile);
@@ -151,7 +197,14 @@ function writeContent(a) {
       lines.push(`## ${name.trim()}`, "", rest.join(":").trim() || name.trim(), "");
     }
     write(join(content, "projects.md"), lines.join("\n"));
-  }
+  } else if (existsSync(join(content, "projects.md")) && !dry) rmSync(join(content, "projects.md"));
+  const widget = { name: a.botName, greeting: look.greeting, placeholder: look.placeholder, accent: look.accent, position: look.position, icon: writeIcon(look, a) };
+  write(join(content, "widget.json"), JSON.stringify(widget, null, 2) + "\n");
+  // The answers without keys, so the studio and a later run can start from them.
+  const saved = { language: a.language, owner: a.owner, botName: a.botName, about: a.about, contact: a.contact, tone: a.tone, detail: a.detail, siteUrl: a.siteUrl, serviceUrl: a.serviceUrl ?? "", model: a.model, review: a.review === "yes",
+    projects: projects.map(project => { const [name, ...rest] = project.split(":"); const summary = rest.join(":").trim(); const url = /\((https?:[^)\s]+)\)\s*$/.exec(summary)?.[1] ?? ""; return { name: name.trim(), summary: url ? summary.slice(0, summary.lastIndexOf("(")).trim() : summary, url }; }),
+    icon: ICONS.includes(look.icon) ? look.icon : "custom", accent: look.accent, position: look.position, greeting: look.greeting, placeholder: look.placeholder };
+  write(join(content, "answers.json"), JSON.stringify(saved, null, 2) + "\n");
   if (a.contentDir) {
     const from = resolve(String(a.contentDir));
     if (!existsSync(from)) fail(`contentDir not found: ${from}`);
@@ -163,13 +216,15 @@ function writeContent(a) {
 }
 
 /* ---------- keys and environment ---------- */
-function mergeEnv(file, values) {
+// Settings are always updated; a null value removes the line. A key in `keep` that already holds a real value is left alone.
+function mergeEnv(file, values, keep = new Set()) {
   const existing = existsSync(file) ? read(file) : "";
-  const lines = existing ? existing.split(/\r?\n/) : [];
+  let lines = existing ? existing.split(/\r?\n/) : [];
   for (const [key, value] of Object.entries(values)) {
     if (value === undefined) continue;
     const index = lines.findIndex(line => line.startsWith(`${key}=`));
-    if (index >= 0) { if (!lines[index].includes("replace-with")) continue; lines[index] = `${key}=${value}`; }
+    if (value === null) { if (index >= 0) lines = lines.filter((_, i) => i !== index); continue; }
+    if (index >= 0) { if (keep.has(key) && !lines[index].includes("replace-with")) continue; lines[index] = `${key}=${value}`; }
     else lines.push(`${key}=${value}`);
   }
   write(file, lines.filter((line, i) => line || i < lines.length - 1).join("\n") + "\n");
@@ -184,14 +239,12 @@ function ignoreEnv(site) {
 /* ---------- commands ---------- */
 function run(command, list, cwd) {
   if (dry) { notes.push(`would run: ${command} ${list.join(" ")} (in ${relative(process.cwd(), cwd) || "."})`); return; }
-  const result = spawnSync(command, list, { cwd, stdio: "inherit", shell: platform === "win32" });
-  if (result.status !== 0) fail(`${command} ${list.join(" ")} failed in ${cwd}`);
+  const result = spawnSync(command, list, { cwd, stdio: quiet ? ["ignore", "ignore", "pipe"] : "inherit", shell: platform === "win32", encoding: "utf8" });
+  if (result.status !== 0) fail(`${command} ${list.join(" ")} failed in ${cwd}${result.stderr ? `: ${result.stderr.trim().split("\n").slice(-3).join(" ")}` : ""}`);
 }
 
-const greeting = a => a.language === "tr" ? `Merhaba! ${a.owner} hakkında, projeleri ve deneyimi üzerine sorabilirsin.` : `Hi! Ask me about ${a.owner}'s projects and experience.`;
-
 /* ---------- Next.js, same origin ---------- */
-function wireNext(site, info, a) {
+function wireNext(site, info, a, widget) {
   const folder = posix(relative(site, bot));
   const pkg = info.pkg;
   pkg.dependencies = { ...pkg.dependencies, cenkbot: `file:./${folder}` };
@@ -209,25 +262,30 @@ function wireNext(site, info, a) {
     "",
   ].join("\n"));
 
-  for (const [from, to] of [["public/widget.js", "public/cenkbot/widget.js"], ["assets/cenkbot.svg", "public/cenkbot/cenkbot.svg"]]) {
+  const publicDir = join(site, "public/cenkbot");
+  if (!dry && existsSync(publicDir)) for (const name of readdirSync(publicDir)) if (/^icon\./.test(name)) rmSync(join(publicDir, name));
+  for (const [from, to] of [["public/widget.js", "public/cenkbot/widget.js"], ["assets/cenkbot.svg", "public/cenkbot/cenkbot.svg"], [`content/${widget.icon}`, `public/cenkbot/${widget.icon}`]]) {
     written.push(to);
     if (!dry) { mkdirSync(dirname(join(site, to)), { recursive: true }); copyFileSync(join(bot, from), join(site, to)); }
   }
 
-  const element = `<cenk-bot endpoint="/api/cenkbot" lang="${a.language}" name=${JSON.stringify(a.botName)} greeting=${JSON.stringify(greeting(a))}></cenk-bot>`;
+  const tag = element(widget, a, "/api/cenkbot", `/cenkbot/${widget.icon}`);
   const layout = ["layout.tsx", "layout.jsx", "layout.js", "layout.ts"].map(name => join(info.appDir, name)).find(file => existsSync(file));
   let patched = false;
   if (layout) {
     let text = read(layout);
-    if (text.includes("<cenk-bot")) patched = true;
-    else if (text.includes("</body>")) {
+    if (text.includes("<cenk-bot")) {
+      const updated = text.replace(/<cenk-bot\b[^>]*><\/cenk-bot>/, tag);
+      if (updated !== text) write(layout, updated);
+      patched = true;
+    } else if (text.includes("</body>")) {
       if (!/from ["']next\/script["']/.test(text)) text = `import Script from "next/script";\n${text}`;
       const at = text.indexOf("</body>");
       const lineStart = text.lastIndexOf("\n", at) + 1;
       const indent = /^[ \t]*/.exec(text.slice(lineStart))[0];
       const inner = `${indent}  `;
       const lead = text.slice(lineStart, at).trim() ? `\n${inner}` : "  ";
-      text = `${text.slice(0, at)}${lead}<Script src="/cenkbot/widget.js" strategy="lazyOnload" />\n${inner}${element}\n${indent}${text.slice(at)}`;
+      text = `${text.slice(0, at)}${lead}<Script src="/cenkbot/widget.js" strategy="lazyOnload" />\n${inner}${tag}\n${indent}${text.slice(at)}`;
       write(layout, text);
       patched = true;
     }
@@ -248,25 +306,27 @@ function wireNext(site, info, a) {
     'declare module "react" {',
     "  namespace JSX {",
     "    interface IntrinsicElements {",
-    '      "cenk-bot": DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> & { endpoint?: string; name?: string; greeting?: string; placeholder?: string };',
+    '      "cenk-bot": DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> & { endpoint?: string; name?: string; greeting?: string; placeholder?: string; icon?: string; accent?: string; position?: "left" | "right" };',
     "    }",
     "  }",
     "}",
     "",
   ].join("\n"));
-  if (!patched) notes.push(`Add to your root layout before </body>: <Script src="/cenkbot/widget.js" strategy="lazyOnload" /> and ${element}`);
+  if (!patched) notes.push(`Add to your root layout before </body>: <Script src="/cenkbot/widget.js" strategy="lazyOnload" /> and ${tag}`);
   notes.push(`Deploying on Vercel or another serverless host: in next.config add outputFileTracingIncludes: { "/api/cenkbot": ["./${folder}/content/**", "./${folder}/config/**"] } so the content files ship with the route.`);
 }
 
 /* ---------- any other website: Cenkbot runs as its own small service ---------- */
-function wireService(site, info, a) {
+function wireService(site, info, a, widget) {
   const service = (a.serviceUrl || "http://localhost:3400").replace(/\/$/, "");
-  const snippet = `<script src="${service}/widget.js" defer></script>\n<cenk-bot endpoint="${service}/api/chat" lang="${a.language}" name=${JSON.stringify(a.botName)} greeting=${JSON.stringify(greeting(a))}></cenk-bot>\n`;
+  const tag = element(widget, a, `${service}/api/chat`, `${service}/icon`);
+  const snippet = `<script src="${service}/widget.js" defer></script>\n${tag}\n`;
   write(join(bot, "site-snippet.html"), snippet);
   if (info.html) {
     const text = read(info.html);
-    if (!text.includes("<cenk-bot") && text.includes("</body>")) write(info.html, text.replace("</body>", `${snippet}</body>`));
-    else if (!text.includes("<cenk-bot")) notes.push(`Paste ${posix(relative(site, join(bot, "site-snippet.html")))} into your page before </body>.`);
+    if (text.includes("<cenk-bot")) { const updated = text.replace(/<cenk-bot\b[^>]*><\/cenk-bot>/, tag); if (updated !== text) write(info.html, updated); }
+    else if (text.includes("</body>")) write(info.html, text.replace("</body>", `${snippet}</body>`));
+    else notes.push(`Paste ${posix(relative(site, join(bot, "site-snippet.html")))} into your page before </body>.`);
   } else notes.push(`Paste ${posix(relative(site, join(bot, "site-snippet.html")))} into every page (or your shared layout) before </body>.`);
   notes.push(`Run the service with "npm start" inside ${posix(relative(site, bot)) || "."} on a Node.js 22 host (HOST=0.0.0.0, behind HTTPS) at ${service}.`);
   if (info.hasNext && !info.appDir) notes.push("Next.js pages router detected: Cenkbot uses its own service. The app router gets a same-origin route automatically.");
@@ -274,47 +334,65 @@ function wireService(site, info, a) {
 
 /* ---------- main ---------- */
 const answers = await collect();
+const given = args.has("answers") ? json(resolve(String(args.get("answers")))) : {};
+const look = appearance(given, answers);
+const contentOnly = args.has("content-only");
 const site = resolve(bot, String(answers.site ?? args.get("site") ?? ".."));
-if (!existsSync(site)) fail(`website folder not found: ${site}`);
-const info = inspect(site);
-const kind = answers.integration && answers.integration !== "auto" ? answers.integration : info.kind;
+if (!contentOnly && !existsSync(site)) fail(`website folder not found: ${site}`);
+const info = contentOnly ? null : inspect(site);
+const kind = contentOnly ? "content" : answers.integration && answers.integration !== "auto" ? answers.integration : info.kind;
 if (kind === "next" && !info.appDir) fail("integration \"next\" needs a Next.js app router (app/ or src/app/)");
-console.log(`\nWebsite: ${site}\nIntegration: ${kind === "next" ? "Next.js route on the same origin" : "separate Cenkbot service + widget"}\n`);
+if (!contentOnly) say(`
+Website: ${site}
+Integration: ${kind === "next" ? "Next.js route on the same origin" : "separate Cenkbot service + widget"}
+`);
 
-writeContent(answers);
+writeContent(answers, look);
+const widget = json(join(bot, "content/widget.json"));
 const review = answers.review === "yes";
 const openrouter = await secret("OPENROUTER_API_KEY", "OpenRouter API key");
 const jev = review ? await secret("TYPESAFE_API_KEY", "Jev (Typesafe) API key") : null;
 const envFile = kind === "next" ? join(site, ".env.local") : join(bot, ".env.local");
 const origin = answers.siteUrl ? new URL(answers.siteUrl).origin : undefined;
+const keep = args.has("replace-keys") ? new Set() : new Set(["OPENROUTER_API_KEY", "TYPESAFE_API_KEY"]);
 mergeEnv(envFile, {
   OPENROUTER_API_KEY: openrouter ?? "replace-with-your-key",
-  ...(review ? { TYPESAFE_API_KEY: jev ?? "replace-with-your-key" } : { CENKBOT_MODE: "basic" }),
+  ...(review ? { TYPESAFE_API_KEY: jev ?? "replace-with-your-key", CENKBOT_MODE: null } : { CENKBOT_MODE: "basic" }),
   CENKBOT_MODEL: answers.model,
   ...(kind === "service" && origin ? { CENKBOT_ALLOWED_ORIGINS: origin } : {}),
-});
+}, keep);
 ignoreEnv(kind === "next" ? site : bot);
-if (!openrouter) notes.push(`Add your OpenRouter key to ${posix(relative(site, envFile))} (OPENROUTER_API_KEY). Get one at https://openrouter.ai/keys.`);
-if (review && !jev) notes.push(`Add your Jev key to ${posix(relative(site, envFile))} (TYPESAFE_API_KEY), or set CENKBOT_MODE=basic.`);
+const envName = posix(relative(contentOnly ? bot : site, envFile));
+if (!openrouter) notes.push(`Add your OpenRouter key to ${envName} (OPENROUTER_API_KEY). Get one at https://openrouter.ai/keys.`);
+if (review && !jev) notes.push(`Add your Jev key to ${envName} (TYPESAFE_API_KEY), or set CENKBOT_MODE=basic.`);
 
-if (!args.has("skip-install")) {
+if (!args.has("skip-install") && !args.has("skip-build")) {
   run("npm", ["install"], bot);
   run("npm", ["run", "build"], bot);
 }
 if (kind === "next") {
-  wireNext(site, info, answers);
+  wireNext(site, info, answers, widget);
   if (!args.has("skip-install")) run(info.manager, ["install"], site);
-} else wireService(site, info, answers);
+} else if (kind === "service") wireService(site, info, answers, widget);
 
-if (!dry && !args.has("skip-install")) {
+let documents = null;
+if (!dry && existsSync(join(bot, "dist/config.js"))) {
   try {
     const { loadSettings } = await import(new URL("../dist/config.js", import.meta.url).href);
-    const { documents } = await loadSettings(bot);
-    console.log(`\nContent check passed: ${documents.length} document(s) indexed.`);
+    documents = (await loadSettings(bot)).documents.length;
+    say(`
+Content check passed: ${documents} document(s) indexed.`);
   } catch (error) { fail(`content check failed: ${error.message}`); }
 }
 
-console.log("\nChanged files:");
-for (const file of [...new Set(written)]) console.log(`  ${file}`);
-if (notes.length) { console.log("\nNext:"); for (const note of notes) console.log(`  - ${note}`); }
-console.log(`\nDone. ${kind === "next" ? "Start your site and open the chat bubble." : "Start the Cenkbot service, then open your site."}\n`);
+const changed = [...new Set(written)];
+if (quiet) {
+  console.log(JSON.stringify({ ok: true, kind, site, changed, notes, documents }));
+} else {
+  say("\nChanged files:");
+  for (const file of changed) say(`  ${file}`);
+  if (notes.length) { say("\nNext:"); for (const note of notes) say(`  - ${note}`); }
+  say(`
+Done. ${kind === "next" ? "Start your site and open the chat bubble." : kind === "service" ? "Start the Cenkbot service, then open your site." : "Content saved."}
+`);
+}

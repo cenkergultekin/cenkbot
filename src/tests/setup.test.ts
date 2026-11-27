@@ -40,6 +40,12 @@ test("setup wires a Next.js app router site on the same origin from an answers f
     const layout = readFileSync(join(dir, "app/layout.tsx"), "utf8");
     assert.match(layout, /import Script from "next\/script"/);
     assert.match(layout, /<cenk-bot endpoint="\/api\/cenkbot" lang="tr"/);
+    assert.match(layout, /icon="\/cenkbot\/icon\.svg" accent="#5b4bd6"/);
+    assert.ok(existsSync(join(dir, "public/cenkbot/icon.svg")));
+    const widget = JSON.parse(readFileSync(join(bot, "content/widget.json"), "utf8"));
+    assert.equal(widget.icon, "icon.svg");
+    const saved = JSON.parse(readFileSync(join(bot, "content/answers.json"), "utf8"));
+    assert.deepEqual(saved.projects, [{ name: "Tiny Atlas", summary: "A map of quiet cafes", url: "https://example.com/atlas" }]);
     assert.equal(JSON.parse(readFileSync(join(dir, "package.json"), "utf8")).dependencies.cenkbot, "file:./cenkbot");
     assert.ok(JSON.parse(readFileSync(join(dir, "tsconfig.json"), "utf8")).exclude.includes("cenkbot"));
     assert.ok(existsSync(join(dir, "public/cenkbot/widget.js")) && existsSync(join(dir, "cenkbot-env.d.ts")));
@@ -62,5 +68,21 @@ test("setup gives any other site a widget snippet for the Cenkbot service", () =
     assert.match(html, /endpoint="https:\/\/chat\.deniz\.example\/api\/chat"/);
     assert.match(readFileSync(join(bot, ".env.local"), "utf8"), /CENKBOT_ALLOWED_ORIGINS=https:\/\/deniz\.example/);
     assert.equal(existsSync(join(dir, ".env.local")), false);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("content-only setup writes appearance without touching the website", () => {
+  const { dir, bot } = site("static");
+  try {
+    const answers = JSON.parse(readFileSync(join(dir, "answers.json"), "utf8"));
+    writeFileSync(join(dir, "answers.json"), JSON.stringify({ ...answers, icon: "letter", accent: "#0f8b6e", position: "left" }));
+    const result = spawnSync(process.execPath, [join(bot, "setup/cli.mjs"), "--answers", join(dir, "answers.json"), "--skip-install", "--content-only", "--json"], { cwd: dir, encoding: "utf8", env: { ...process.env, OPENROUTER_API_KEY: "" } });
+    assert.equal(result.status, 0, result.stderr);
+    const summary = JSON.parse(result.stdout.trim());
+    assert.equal(summary.kind, "content");
+    assert.match(readFileSync(join(bot, "content/icon.svg"), "utf8"), />D</);
+    assert.equal(JSON.parse(readFileSync(join(bot, "content/widget.json"), "utf8")).position, "left");
+    assert.equal(readFileSync(join(dir, "index.html"), "utf8").includes("cenk-bot"), false);
+    assert.ok(existsSync(join(bot, ".env.local")));
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });

@@ -13,7 +13,8 @@
     "check": "tsc --noEmit",
     "build": "tsc",
     "test": "tsx --test src/tests/*.test.ts",
-    "setup": "node setup/cli.mjs",
+    "setup": "node setup/studio.mjs",
+    "setup:cli": "node setup/cli.mjs",
     "prestart": "npm run build",
     "start": "node --env-file-if-exists=.env.local dist/server.js",
     "dev": "node --env-file-if-exists=.env.local --import tsx --watch src/server.ts"

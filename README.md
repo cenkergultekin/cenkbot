@@ -36,14 +36,30 @@ cd cenkbot
 npm run setup
 ```
 
-Answer a few questions about you and your work. The setup writes your content, installs and builds Cenkbot, and wires it into the site:
+A setup page opens in your browser. Pick an icon (or upload your own), a name, a color and the first message, describe yourself and your projects, add your [OpenRouter key](https://openrouter.ai/keys), and watch the real widget update next to the form. Ask it a question right there. Then press **Add to my site**:
 
 - **Next.js (app router):** a chat route on your own domain, the widget in your root layout and keys in `.env.local`. Nothing else to host.
-- **Any other site:** Cenkbot runs as a small Node service and the widget snippet goes into your page.
+- **Any other site:** Cenkbot runs as a small Node service and the widget code goes into your page.
 
-Add your [OpenRouter key](https://openrouter.ai/keys) where the setup tells you, start your site and open the chat bubble. Running the setup again is safe.
+Prefer the terminal? `npm run setup:cli` asks the same questions. Running either again is safe.
 
 **Using a coding agent?** Ask it: *"Set up Cenkbot on this site by following `cenkbot/setup/AGENT.md`."* It asks the questions, runs the setup and checks the result.
+
+## Where things live
+
+Everything the setup writes is a plain file you can edit by hand and commit (except keys).
+
+| Folder or file | What it holds |
+| --- | --- |
+| `content/profile.json` | Name, scope, tone, answer length, language, status messages |
+| `content/*.md` | What the bot knows. Add or edit Markdown files; restart to re-index |
+| `content/widget.json` | Widget name, first message, input hint, color, position, icon file |
+| `content/icon.*` | The widget icon chosen in setup |
+| `config/bot.json` | Model limits: tokens, timeout, temperature |
+| `.env.local` | Keys and model choice. Never commit it |
+| `public/widget.js` | The widget itself, one dependency-free file |
+| `src/` | The chatbot: retrieval, model reply, optional Jev review, HTTP service and route handler |
+| `setup/` | The setup page, the terminal setup and the guide for coding agents |
 
 ## Try it on its own
 
